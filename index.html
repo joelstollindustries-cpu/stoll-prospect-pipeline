@@ -157,7 +157,15 @@ let state = {
   confirmDeleteId: null,
 };
 
-function uid() { return Math.random().toString(36).slice(2, 10); }
+function uid() {
+  if (window.crypto && window.crypto.randomUUID) return window.crypto.randomUUID();
+  // Fallback UUIDv4 for older browsers without crypto.randomUUID
+  return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g, (c) => {
+    const r = (Math.random() * 16) | 0;
+    const v = c === "x" ? r : (r & 0x3) | 0x8;
+    return v.toString(16);
+  });
+}
 function todayISO() { return new Date().toISOString().slice(0, 10); }
 function fmtDate(d) {
   if (!d) return "—";
@@ -240,6 +248,7 @@ function scheduleSave() {
 }
 
 async function doSave() {
+  state.prospects = state.prospects.map((p) => (isValidUUID(p.id) ? p : { ...p, id: uid() }));
   state.saving = true;
   render();
   try {
@@ -356,11 +365,14 @@ function handleFileImport(e) {
   reader.readAsText(file);
   e.target.value = "";
 }
+function isValidUUID(s) {
+  return typeof s === "string" && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
+}
 function applyImport(text) {
   try {
     const parsed = JSON.parse(text);
     if (!Array.isArray(parsed)) throw new Error("File doesn't contain a list of prospects.");
-    state.prospects = parsed;
+    state.prospects = parsed.map((p) => (isValidUUID(p.id) ? p : { ...p, id: uid() }));
     state.showImport = false; state.importText = ""; state.importError = "";
     scheduleSave();
   } catch (e) {
