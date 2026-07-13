@@ -7,50 +7,96 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
   * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root, body[data-theme="dark"] {
+    --bg: #1C1A1B;
+    --surface: #262324;
+    --surface-alt: #1C1A1B;
+    --border: #3A3536;
+    --border-soft: #2E2A2B;
+    --badge-border: #4A4546;
+    --text: #F4F1EF;
+    --text-secondary: #A9A0A0;
+    --text-muted: #7A7274;
+    --text-dim: #DCD6D6;
+    --placeholder: #726A6C;
+  }
+  body[data-theme="gray"] {
+    --bg: #484546;
+    --surface: #565355;
+    --surface-alt: #403D3E;
+    --border: #6A6668;
+    --border-soft: #5C595B;
+    --badge-border: #6A6668;
+    --text: #F2EFEE;
+    --text-secondary: #C7C1C2;
+    --text-muted: #A29C9D;
+    --text-dim: #DAD5D4;
+    --placeholder: #9C9697;
+  }
+  body[data-theme="light"] {
+    --bg: #F7F3F1;
+    --surface: #FFFFFF;
+    --surface-alt: #F1ECEA;
+    --border: #DDD4D1;
+    --border-soft: #E8E2E0;
+    --badge-border: #D2C7C4;
+    --text: #231F20;
+    --text-secondary: #5C5556;
+    --text-muted: #8A8283;
+    --text-dim: #3A3536;
+    --placeholder: #A39B9A;
+  }
+
   body {
-    background: #1C1A1B; color: #F4F1EF; font-family: 'Inter', sans-serif;
+    background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif;
     padding: 28px 20px 60px; min-height: 100vh;
   }
   input, select, textarea, button { font-family: 'Inter', sans-serif; }
   input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid #9F1C34; outline-offset: 1px; }
-  ::placeholder { color: #726A6C; }
+  ::placeholder { color: var(--placeholder); }
   a { color: inherit; }
   .page { max-width: 920px; margin: 0 auto; }
   .header-title-row { display: flex; align-items: center; gap: 9px; }
   .title { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 25px; }
-  .subtitle { color: #A9A0A0; font-size: 13px; margin: 4px 0 0 31px; }
-  .shared-notice { color: #7A7274; font-size: 11.5px; margin: 5px 0 0 31px; font-style: italic; }
+  .subtitle { color: var(--text-secondary); font-size: 13px; margin: 4px 0 0 31px; }
+  .shared-notice { color: var(--text-muted); font-size: 11.5px; margin: 5px 0 0 31px; font-style: italic; }
   .backup-row { display: flex; gap: 8px; margin: 12px 0 0 31px; flex-wrap: wrap; }
   .backup-btn {
-    background: transparent; border: 1px solid #3A3536; color: #A9A0A0; border-radius: 6px;
+    background: transparent; border: 1px solid var(--border); color: var(--text-secondary); border-radius: 6px;
     padding: 6px 10px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
   }
   .tab-bar { display: flex; align-items: center; gap: 8px; margin: 20px 0 14px; flex-wrap: wrap; }
   .tab-btn {
-    background: transparent; border: 1px solid #3A3536; color: #A9A0A0; padding: 8px 14px;
+    background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 14px;
     border-radius: 7px; font-size: 13.5px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 7px;
   }
-  .tab-btn.active { background: #262324; color: #F4F1EF; border-color: #9F1C34; }
-  .tab-count { background: #3A3536; padding: 1px 7px; border-radius: 20px; font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .tab-btn.active { background: var(--surface); color: var(--text); border-color: #9F1C34; }
+  .tab-count { background: var(--border); padding: 1px 7px; border-radius: 20px; font-size: 11px; font-family: 'JetBrains Mono', monospace; }
   .spacer { flex: 1; }
+  .settings-btn {
+    background: transparent; border: 1px solid var(--border); color: var(--text-secondary); padding: 8px 10px;
+    border-radius: 7px; cursor: pointer; display: flex; align-items: center;
+  }
+  .settings-btn.active { background: var(--surface); color: var(--text); border-color: #9F1C34; }
   .add-btn {
     background: #9F1C34; color: #F4F1EF; border: none; border-radius: 7px; padding: 8px 14px;
     font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
   }
-  .add-form { display: flex; gap: 8px; background: #262324; border: 1px solid #3A3536; border-radius: 9px; padding: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .add-form { display: flex; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: 9px; padding: 12px; margin-bottom: 16px; flex-wrap: wrap; }
   .input, select.input {
-    background: #1C1A1B; border: 1px solid #3A3536; color: #F4F1EF; border-radius: 6px; padding: 7px 9px; font-size: 13.5px;
+    background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 7px 9px; font-size: 13.5px;
   }
   .btn-primary {
     background: #9F1C34; color: #F4F1EF; border: none; border-radius: 6px; padding: 8px 12px;
     font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
   }
   .btn-ghost {
-    background: transparent; color: #A9A0A0; border: 1px solid #3A3536; border-radius: 6px;
+    background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 6px;
     padding: 8px 10px; font-size: 13px; cursor: pointer;
   }
   .list { display: flex; flex-direction: column; gap: 10px; }
-  .card { display: flex; background: #262324; border: 1px solid #3A3536; border-radius: 10px; overflow: hidden; }
+  .card { display: flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
   .card-bar { width: 5px; flex-shrink: 0; }
   .card-body { flex: 1; min-width: 0; }
   .card-header {
@@ -60,56 +106,69 @@
   .card-header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
   .card-header-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
   .company-name { font-family: 'Poppins', sans-serif; font-size: 16.5px; font-weight: 600; }
-  .badge { font-size: 11.5px; border: 1px solid #4A4546; color: #A9A0A0; border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+  .badge { font-size: 11.5px; border: 1px solid var(--badge-border); color: var(--text-secondary); border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
   .dollar-badge { font-size: 11.5px; color: #3E5A48; background: rgba(62,90,72,0.15); border-radius: 20px; padding: 2px 9px; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
-  .next-contact { font-size: 12.5px; color: #A9A0A0; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 5px; }
+  .next-contact { font-size: 12.5px; color: var(--text-secondary); font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 5px; }
   .overdue { color: #9F1C34; }
   .chevron { transition: transform 0.15s; }
   .chevron.open { transform: rotate(180deg); }
-  .detail { padding: 4px 16px 16px; border-top: 1px solid #3A3536; }
+  .detail { padding: 4px 16px 16px; border-top: 1px solid var(--border); }
   .field-grid, .contact-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
   .field { display: flex; flex-direction: column; gap: 5px; }
-  .field-label { font-size: 11px; color: #7A7274; text-transform: uppercase; letter-spacing: 0.5px; }
+  .field-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
   .dollar-wrap { position: relative; }
-  .dollar-prefix { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #7A7274; font-size: 13.5px; pointer-events: none; }
-  .textarea { background: #1C1A1B; border: 1px solid #3A3536; color: #F4F1EF; border-radius: 6px; padding: 8px 9px; font-size: 13.5px; resize: vertical; font-family: 'Inter', sans-serif; width: 100%; }
+  .dollar-prefix { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 13.5px; pointer-events: none; }
+  .textarea { background: var(--surface-alt); border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 8px 9px; font-size: 13.5px; resize: vertical; font-family: 'Inter', sans-serif; width: 100%; }
   .section { margin-top: 18px; }
-  .section-label { font-size: 11px; color: #7A7274; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .section-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
   .notes-add { display: flex; gap: 8px; align-items: flex-start; }
   .notes-list, .step-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
-  .empty-inline { font-size: 12.5px; color: #726A6C; font-style: italic; }
-  .note-item { background: #1C1A1B; border: 1px solid #2E2A2B; border-radius: 6px; padding: 8px 10px; display: flex; gap: 10px; font-size: 13px; }
+  .empty-inline { font-size: 12.5px; color: var(--text-muted); font-style: italic; }
+  .note-item { background: var(--surface-alt); border: 1px solid var(--border-soft); border-radius: 6px; padding: 8px 10px; display: flex; gap: 10px; font-size: 13px; }
   .note-date { color: #9F1C34; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; flex-shrink: 0; padding-top: 1px; }
-  .note-text { color: #DCD6D6; line-height: 1.4; }
-  .step-item { display: flex; align-items: center; gap: 9px; background: #1C1A1B; border: 1px solid #2E2A2B; border-radius: 6px; padding: 7px 9px; }
+  .note-text { color: var(--text-dim); line-height: 1.4; }
+  .step-item { display: flex; align-items: center; gap: 9px; background: var(--surface-alt); border: 1px solid var(--border-soft); border-radius: 6px; padding: 7px 9px; }
   .step-item.done { opacity: 0.75; }
   .step-checkbox { background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; flex-shrink: 0; }
   .step-text { flex: 1; font-size: 13.5px; }
-  .step-text.done { color: #A9A0A0; text-decoration: line-through; }
-  .step-done-date { font-size: 11px; color: #7A7274; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
-  .step-delete { background: none; border: none; color: #7A7274; cursor: pointer; padding: 2px; flex-shrink: 0; }
-  .completed-toggle { background: none; border: none; color: #7A7274; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0; margin-top: 10px; }
+  .step-text.done { color: var(--text-secondary); text-decoration: line-through; }
+  .step-done-date { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+  .step-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; flex-shrink: 0; }
+  .completed-toggle { background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0; margin-top: 10px; }
   .action-row { display: flex; align-items: center; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
   .btn-won { background: #3E5A48; color: #E7F0EA; border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
   .btn-lost { background: #6B2430; color: #F3E1E3; border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
-  .btn-reopen { background: transparent; color: #A9A0A0; border: 1px solid #3A3536; border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
-  .btn-delete { background: transparent; color: #7A7274; border: 1px solid #3A3536; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
-  .confirm-text { font-size: 12.5px; color: #A9A0A0; }
-  .empty { color: #726A6C; font-size: 13.5px; padding: 30px 0; text-align: center; }
-  .save-status { max-width: 920px; margin: 16px auto 0; font-size: 12.5px; text-align: center; color: #7A7274; }
+  .btn-reopen { background: transparent; color: var(--text-secondary); border: 1px solid var(--border); border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-delete { background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+  .confirm-text { font-size: 12.5px; color: var(--text-secondary); }
+  .empty { color: var(--text-muted); font-size: 13.5px; padding: 30px 0; text-align: center; }
+  .save-status { max-width: 920px; margin: 16px auto 0; font-size: 12.5px; text-align: center; color: var(--text-muted); }
   .save-status.error { color: #9F1C34; }
   .retry-link { background: none; border: none; color: #9F1C34; text-decoration: underline; font-size: 12.5px; cursor: pointer; margin-left: 8px; padding: 0; }
-  .import-panel { margin: 10px 0 0 31px; max-width: 500px; background: #262324; border: 1px solid #3A3536; border-radius: 8px; padding: 12px; }
+  .import-panel { margin: 10px 0 0 31px; max-width: 500px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
   .import-error { color: #9F1C34; font-size: 12px; margin-top: 8px; }
 
   /* Passcode gate */
   .gate { max-width: 360px; margin: 18vh auto 0; text-align: center; }
   .gate .title { justify-content: center; display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
-  .gate p { color: #A9A0A0; font-size: 13px; margin-bottom: 20px; }
+  .gate p { color: var(--text-secondary); font-size: 13px; margin-bottom: 20px; }
   .gate input { width: 100%; text-align: center; font-size: 16px; padding: 10px; letter-spacing: 2px; }
   .gate button { width: 100%; margin-top: 12px; padding: 10px; justify-content: center; }
   .gate .err { color: #9F1C34; font-size: 12.5px; margin-top: 10px; }
+
+  /* Settings */
+  .settings-panel { max-width: 560px; }
+  .theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
+  .theme-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
+    cursor: pointer; text-align: left; color: var(--text);
+  }
+  .theme-card.selected { border-color: #9F1C34; }
+  .theme-swatch { display: flex; height: 34px; border-radius: 6px; overflow: hidden; margin-bottom: 10px; border: 1px solid var(--border); }
+  .theme-swatch span { flex: 1; }
+  .theme-card-label { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
 </style>
+
 </head>
 <body>
   <div id="root"></div>
@@ -126,8 +185,9 @@ const ICONS = {
   calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
   chevron: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
   plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>',
-  square: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A7274" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>',
+  square: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>',
   checksquare: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3E5A48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>',
+  gear: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>',
   x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
   trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>',
   reopen: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
@@ -156,6 +216,7 @@ let state = {
   showCompleted: {},
   confirmDeleteId: null,
   fileUploadStatus: {},
+  theme: localStorage.getItem("board_theme") || "dark",
 };
 
 function uid() {
@@ -417,6 +478,12 @@ function addProspect() {
 function loadSampleData() {
   state.prospects = seedData();
   scheduleSave();
+}
+function setTheme(theme) {
+  state.theme = theme;
+  localStorage.setItem("board_theme", theme);
+  document.body.setAttribute("data-theme", theme);
+  render();
 }
 function exportData() {
   const blob = new Blob([JSON.stringify(state.prospects, null, 2)], { type: "application/json" });
@@ -718,32 +785,60 @@ function renderBoard() {
         ${state.tab === "active" ? `
           <button class="add-btn" onclick="state.showAddForm = !state.showAddForm; render()">${ICONS.plus} Add Prospect</button>
         ` : ""}
+        <button class="settings-btn ${state.tab === "settings" ? "active" : ""}" title="Settings"
+          onclick="state.tab='settings'; state.expandedId=null; render()">${ICONS.gear}</button>
       </div>
 
-      ${state.showAddForm ? `
-        <div class="add-form">
-          <input id="newNameInput" class="input" placeholder="Company name" value="${esc(state.newName)}"
-            oninput="state.newName=this.value" onkeydown="if(event.key==='Enter'){addProspect()}" />
-          <select class="input" onchange="state.newChannel=this.value">
-            ${CHANNELS.map((c) => `<option value="${esc(c)}" ${state.newChannel === c ? "selected" : ""}>${esc(c)}</option>`).join("")}
-          </select>
-          <button class="btn-primary" onclick="addProspect()">${ICONS.check} Save</button>
-          <button class="btn-ghost" onclick="state.showAddForm=false; render()">${ICONS.x}</button>
-        </div>
-      ` : ""}
+      ${state.tab === "settings" ? renderSettings() : `
+        ${state.showAddForm ? `
+          <div class="add-form">
+            <input id="newNameInput" class="input" placeholder="Company name" value="${esc(state.newName)}"
+              oninput="state.newName=this.value" onkeydown="if(event.key==='Enter'){addProspect()}" />
+            <select class="input" onchange="state.newChannel=this.value">
+              ${CHANNELS.map((c) => `<option value="${esc(c)}" ${state.newChannel === c ? "selected" : ""}>${esc(c)}</option>`).join("")}
+            </select>
+            <button class="btn-primary" onclick="addProspect()">${ICONS.check} Save</button>
+            <button class="btn-ghost" onclick="state.showAddForm=false; render()">${ICONS.x}</button>
+          </div>
+        ` : ""}
 
-      ${!state.loaded ? `<div class="empty">Loading pipeline…</div>` : ""}
+        ${!state.loaded ? `<div class="empty">Loading pipeline…</div>` : ""}
 
-      ${state.loaded && filtered.length === 0 ? `
-        <div class="empty">
-          ${state.prospects.length === 0 && state.tab === "active"
-            ? `<div>No prospects saved to this board yet.</div><button class="btn-ghost" style="margin-top:10px" onclick="loadSampleData()">Load sample data</button>`
-            : state.tab === "active" ? "No active prospects yet. Add one to start tracking." : `No ${STATUS_LABEL[state.tab].toLowerCase()} prospects yet.`}
-        </div>
-      ` : ""}
+        ${state.loaded && filtered.length === 0 ? `
+          <div class="empty">
+            ${state.prospects.length === 0 && state.tab === "active"
+              ? `<div>No prospects saved to this board yet.</div><button class="btn-ghost" style="margin-top:10px" onclick="loadSampleData()">Load sample data</button>`
+              : state.tab === "active" ? "No active prospects yet. Add one to start tracking." : `No ${STATUS_LABEL[state.tab].toLowerCase()} prospects yet.`}
+          </div>
+        ` : ""}
 
-      <div class="list">${filtered.map(renderCard).join("")}</div>
-      ${saveStatus}
+        <div class="list">${filtered.map(renderCard).join("")}</div>
+        ${saveStatus}
+      `}
+    </div>
+  `;
+}
+
+function renderSettings() {
+  const themes = [
+    { id: "dark", label: "Dark", swatches: ["#1C1A1B", "#262324", "#9F1C34"] },
+    { id: "gray", label: "In-between", swatches: ["#484546", "#565355", "#9F1C34"] },
+    { id: "light", label: "Light", swatches: ["#F7F3F1", "#FFFFFF", "#9F1C34"] },
+  ];
+  return `
+    <div class="settings-panel">
+      <div class="section-label">Appearance</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-top:-2px;margin-bottom:4px">
+        Color scheme is a per-device preference — everyone on the team can pick their own.
+      </div>
+      <div class="theme-grid">
+        ${themes.map((t) => `
+          <button class="theme-card ${state.theme === t.id ? "selected" : ""}" onclick="setTheme('${t.id}')">
+            <div class="theme-swatch">${t.swatches.map((c) => `<span style="background:${c}"></span>`).join("")}</div>
+            <div class="theme-card-label">${state.theme === t.id ? ICONS.check : ""} ${t.label}</div>
+          </button>
+        `).join("")}
+      </div>
     </div>
   `;
 }
@@ -770,9 +865,10 @@ Object.assign(window, {
   updateProspect, updateContact, addNote, addActionStep, toggleActionStep, deleteActionStep,
   deleteProspect, setStatus, addProspect, loadSampleData, exportData, handleFileImport,
   applyImport, handlePasscodeSubmit, doSave, clearToken, state, render,
-  handleFileSelect, downloadFile, deleteFile,
+  handleFileSelect, downloadFile, deleteFile, setTheme,
 });
 
+document.body.setAttribute("data-theme", state.theme);
 render();
 tryLoad();
 </script>
