@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Prospect Pipeline · Stoll Industries</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    background: #1C1A1B; color: #F4F1EF; font-family: 'Inter', sans-serif;
+    padding: 28px 20px 60px; min-height: 100vh;
+  }
+  input, select, textarea, button { font-family: 'Inter', sans-serif; }
+  input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid #9F1C34; outline-offset: 1px; }
+  ::placeholder { color: #726A6C; }
+  a { color: inherit; }
+  .page { max-width: 920px; margin: 0 auto; }
+  .header-title-row { display: flex; align-items: center; gap: 9px; }
+  .title { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 25px; }
+  .subtitle { color: #A9A0A0; font-size: 13px; margin: 4px 0 0 31px; }
+  .shared-notice { color: #7A7274; font-size: 11.5px; margin: 5px 0 0 31px; font-style: italic; }
+  .backup-row { display: flex; gap: 8px; margin: 12px 0 0 31px; flex-wrap: wrap; }
+  .backup-btn {
+    background: transparent; border: 1px solid #3A3536; color: #A9A0A0; border-radius: 6px;
+    padding: 6px 10px; font-size: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .tab-bar { display: flex; align-items: center; gap: 8px; margin: 20px 0 14px; flex-wrap: wrap; }
+  .tab-btn {
+    background: transparent; border: 1px solid #3A3536; color: #A9A0A0; padding: 8px 14px;
+    border-radius: 7px; font-size: 13.5px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 7px;
+  }
+  .tab-btn.active { background: #262324; color: #F4F1EF; border-color: #9F1C34; }
+  .tab-count { background: #3A3536; padding: 1px 7px; border-radius: 20px; font-size: 11px; font-family: 'JetBrains Mono', monospace; }
+  .spacer { flex: 1; }
+  .add-btn {
+    background: #9F1C34; color: #F4F1EF; border: none; border-radius: 7px; padding: 8px 14px;
+    font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
+  }
+  .add-form { display: flex; gap: 8px; background: #262324; border: 1px solid #3A3536; border-radius: 9px; padding: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .input, select.input {
+    background: #1C1A1B; border: 1px solid #3A3536; color: #F4F1EF; border-radius: 6px; padding: 7px 9px; font-size: 13.5px;
+  }
+  .btn-primary {
+    background: #9F1C34; color: #F4F1EF; border: none; border-radius: 6px; padding: 8px 12px;
+    font-size: 13px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 5px;
+  }
+  .btn-ghost {
+    background: transparent; color: #A9A0A0; border: 1px solid #3A3536; border-radius: 6px;
+    padding: 8px 10px; font-size: 13px; cursor: pointer;
+  }
+  .list { display: flex; flex-direction: column; gap: 10px; }
+  .card { display: flex; background: #262324; border: 1px solid #3A3536; border-radius: 10px; overflow: hidden; }
+  .card-bar { width: 5px; flex-shrink: 0; }
+  .card-body { flex: 1; min-width: 0; }
+  .card-header {
+    width: 100%; background: transparent; border: none; color: inherit; padding: 14px 16px; cursor: pointer;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; flex-wrap: wrap;
+  }
+  .card-header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
+  .card-header-right { display: flex; align-items: center; gap: 14px; flex-shrink: 0; }
+  .company-name { font-family: 'Poppins', sans-serif; font-size: 16.5px; font-weight: 600; }
+  .badge { font-size: 11.5px; border: 1px solid #4A4546; color: #A9A0A0; border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+  .dollar-badge { font-size: 11.5px; color: #3E5A48; background: rgba(62,90,72,0.15); border-radius: 20px; padding: 2px 9px; white-space: nowrap; font-family: 'JetBrains Mono', monospace; font-weight: 500; }
+  .next-contact { font-size: 12.5px; color: #A9A0A0; font-family: 'JetBrains Mono', monospace; display: flex; align-items: center; gap: 5px; }
+  .overdue { color: #9F1C34; }
+  .chevron { transition: transform 0.15s; }
+  .chevron.open { transform: rotate(180deg); }
+  .detail { padding: 4px 16px 16px; border-top: 1px solid #3A3536; }
+  .field-grid, .contact-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field-label { font-size: 11px; color: #7A7274; text-transform: uppercase; letter-spacing: 0.5px; }
+  .dollar-wrap { position: relative; }
+  .dollar-prefix { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: #7A7274; font-size: 13.5px; pointer-events: none; }
+  .textarea { background: #1C1A1B; border: 1px solid #3A3536; color: #F4F1EF; border-radius: 6px; padding: 8px 9px; font-size: 13.5px; resize: vertical; font-family: 'Inter', sans-serif; width: 100%; }
+  .section { margin-top: 18px; }
+  .section-label { font-size: 11px; color: #7A7274; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px; display: flex; align-items: center; gap: 5px; }
+  .notes-add { display: flex; gap: 8px; align-items: flex-start; }
+  .notes-list, .step-list { margin-top: 12px; display: flex; flex-direction: column; gap: 8px; }
+  .empty-inline { font-size: 12.5px; color: #726A6C; font-style: italic; }
+  .note-item { background: #1C1A1B; border: 1px solid #2E2A2B; border-radius: 6px; padding: 8px 10px; display: flex; gap: 10px; font-size: 13px; }
+  .note-date { color: #9F1C34; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; flex-shrink: 0; padding-top: 1px; }
+  .note-text { color: #DCD6D6; line-height: 1.4; }
+  .step-item { display: flex; align-items: center; gap: 9px; background: #1C1A1B; border: 1px solid #2E2A2B; border-radius: 6px; padding: 7px 9px; }
+  .step-item.done { opacity: 0.75; }
+  .step-checkbox { background: none; border: none; padding: 0; cursor: pointer; display: flex; align-items: center; flex-shrink: 0; }
+  .step-text { flex: 1; font-size: 13.5px; }
+  .step-text.done { color: #A9A0A0; text-decoration: line-through; }
+  .step-done-date { font-size: 11px; color: #7A7274; font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
+  .step-delete { background: none; border: none; color: #7A7274; cursor: pointer; padding: 2px; flex-shrink: 0; }
+  .completed-toggle { background: none; border: none; color: #7A7274; font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0; margin-top: 10px; }
+  .action-row { display: flex; align-items: center; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
+  .btn-won { background: #3E5A48; color: #E7F0EA; border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-lost { background: #6B2430; color: #F3E1E3; border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-reopen { background: transparent; color: #A9A0A0; border: 1px solid #3A3536; border-radius: 6px; padding: 8px 14px; font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+  .btn-delete { background: transparent; color: #7A7274; border: 1px solid #3A3536; border-radius: 6px; padding: 8px 10px; cursor: pointer; }
+  .confirm-text { font-size: 12.5px; color: #A9A0A0; }
+  .empty { color: #726A6C; font-size: 13.5px; padding: 30px 0; text-align: center; }
+  .save-status { max-width: 920px; margin: 16px auto 0; font-size: 12.5px; text-align: center; color: #7A7274; }
+  .save-status.error { color: #9F1C34; }
+  .retry-link { background: none; border: none; color: #9F1C34; text-decoration: underline; font-size: 12.5px; cursor: pointer; margin-left: 8px; padding: 0; }
+  .import-panel { margin: 10px 0 0 31px; max-width: 500px; background: #262324; border: 1px solid #3A3536; border-radius: 8px; padding: 12px; }
+  .import-error { color: #9F1C34; font-size: 12px; margin-top: 8px; }
+
+  /* Passcode gate */
+  .gate { max-width: 360px; margin: 18vh auto 0; text-align: center; }
+  .gate .title { justify-content: center; display: flex; align-items: center; gap: 9px; margin-bottom: 6px; }
+  .gate p { color: #A9A0A0; font-size: 13px; margin-bottom: 20px; }
+  .gate input { width: 100%; text-align: center; font-size: 16px; padding: 10px; letter-spacing: 2px; }
+  .gate button { width: 100%; margin-top: 12px; padding: 10px; justify-content: center; }
+  .gate .err { color: #9F1C34; font-size: 12.5px; margin-top: 10px; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+<script>
+const API_BASE = "https://cddgbxjzoyhqeipdajwz.supabase.co/functions/v1/board-api";
+const CHANNELS = ["Kitchen & Bath", "Hearth & Patio", "Outdoor Kitchen"];
+const POTENTIAL = ["High", "Medium", "Low"];
+const POTENTIAL_COLOR = { High: "#C1622C", Medium: "#8C9AAE", Low: "#5A5456" };
+const STATUS_LABEL = { active: "Active", won: "Won", lost: "Lost" };
+
+const ICONS = {
+  flame: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F1C34" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+  calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
+  chevron: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg>',
+  plus: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M12 5v14"/></svg>',
+  square: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#7A7274" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>',
+  checksquare: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3E5A48" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="m9 12 2 2 4-4"/></svg>',
+  x: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 6 6 18M6 6l12 12"/></svg>',
+  trash: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0-1 14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2L4 6"/></svg>',
+  reopen: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>',
+  download: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>',
+  upload: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>',
+  check: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg>',
+};
+
+let state = {
+  authenticated: false,
+  authError: "",
+  prospects: [],
+  loaded: false,
+  tab: "active",
+  expandedId: null,
+  showAddForm: false,
+  newName: "",
+  newChannel: CHANNELS[0],
+  saving: false,
+  saveError: "",
+  showImport: false,
+  importText: "",
+  importError: "",
+  noteDraft: {},
+  stepDraft: {},
+  showCompleted: {},
+  confirmDeleteId: null,
+};
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+function todayISO() { return new Date().toISOString().slice(0, 10); }
+function fmtDate(d) {
+  if (!d) return "—";
+  const dt = new Date(d + "T00:00:00");
+  if (isNaN(dt)) return d;
+  return dt.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+}
+function fmtCurrency(n) {
+  const num = Number(n);
+  if (!num) return "$0";
+  return "$" + num.toLocaleString("en-US");
+}
+
+function getToken() { return localStorage.getItem("board_token"); }
+function setToken(t) { localStorage.setItem("board_token", t); }
+function clearToken() { localStorage.removeItem("board_token"); }
+
+async function api(action, opts = {}) {
+  const headers = { "Content-Type": "application/json" };
+  const token = getToken();
+  if (token) headers["x-board-token"] = token;
+  const res = await fetch(`${API_BASE}?action=${action}`, {
+    method: opts.body ? "POST" : "GET",
+    headers,
+    body: opts.body ? JSON.stringify(opts.body) : undefined,
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) {
+    const err = new Error(data.error || `Request failed (${res.status})`);
+    err.status = res.status;
+    throw err;
+  }
+  return data;
+}
+
+async function tryLoad() {
+  const token = getToken();
+  if (!token) {
+    state.authenticated = false;
+    render();
+    return;
+  }
+  try {
+    const data = await api("list");
+    state.authenticated = true;
+    state.prospects = data.prospects;
+    state.loaded = true;
+    render();
+  } catch (e) {
+    if (e.status === 401) {
+      clearToken();
+      state.authenticated = false;
+      render();
+    } else {
+      state.authError = e.message;
+      render();
+    }
+  }
+}
+
+async function submitPasscode(passcode) {
+  state.authError = "";
+  try {
+    const data = await api("login", { body: { passcode } });
+    setToken(data.token);
+    state.authenticated = true;
+    await tryLoad();
+  } catch (e) {
+    state.authError = e.message || "Incorrect passcode.";
+    render();
+  }
+}
+
+let saveTimer = null;
+function scheduleSave() {
+  state.saveError = "";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 500);
+  render();
+}
+
+async function doSave() {
+  state.saving = true;
+  render();
+  try {
+    await api("save", { body: { prospects: state.prospects } });
+    state.saving = false;
+    state.saveError = "";
+  } catch (e) {
+    state.saving = false;
+    state.saveError = e.message || "Couldn't save changes.";
+  }
+  render();
+}
+
+function seedData() {
+  return [
+    {
+      id: uid(), companyName: "Harmon Kitchen & Hearth", channel: "Hearth & Patio", status: "active",
+      salesPotential: "High", annualPotential: 85000,
+      companyOverview: "Regional hearth & patio dealer with three showroom locations across upstate SC.",
+      launchGoal: "Q4 2026", lastContactDate: "2026-06-28", nextContactDate: "2026-07-14",
+      primaryContact: { name: "Dana Whitfield", phone: "864-555-0142", email: "dana@harmonkh.com" },
+      notes: [{ id: uid(), date: "2026-06-28", text: "Walked through the fireplace door line, strong interest in the custom bronze finish." }],
+      actionSteps: [{ id: uid(), text: "Send updated freight quote", done: false, doneDate: null }],
+      closedDate: null,
+    },
+  ];
+}
+
+// ---------- Mutations ----------
+function updateProspect(id, patch) {
+  state.prospects = state.prospects.map((p) => (p.id === id ? { ...p, ...patch } : p));
+  scheduleSave();
+}
+function updateContact(id, patch) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === id ? { ...p, primaryContact: { ...p.primaryContact, ...patch } } : p
+  );
+  scheduleSave();
+}
+function addNote(id) {
+  const text = (state.noteDraft[id] || "").trim();
+  if (!text) return;
+  state.prospects = state.prospects.map((p) =>
+    p.id === id ? { ...p, notes: [{ id: uid(), date: todayISO(), text }, ...p.notes] } : p
+  );
+  state.noteDraft[id] = "";
+  scheduleSave();
+}
+function addActionStep(id) {
+  const text = (state.stepDraft[id] || "").trim();
+  if (!text) return;
+  state.prospects = state.prospects.map((p) =>
+    p.id === id ? { ...p, actionSteps: [...(p.actionSteps || []), { id: uid(), text, done: false, doneDate: null }] } : p
+  );
+  state.stepDraft[id] = "";
+  scheduleSave();
+}
+function toggleActionStep(id, stepId) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === id
+      ? { ...p, actionSteps: p.actionSteps.map((s) => s.id === stepId ? { ...s, done: !s.done, doneDate: !s.done ? todayISO() : null } : s) }
+      : p
+  );
+  scheduleSave();
+}
+function deleteActionStep(id, stepId) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === id ? { ...p, actionSteps: p.actionSteps.filter((s) => s.id !== stepId) } : p
+  );
+  scheduleSave();
+}
+function deleteProspect(id) {
+  state.prospects = state.prospects.filter((p) => p.id !== id);
+  if (state.expandedId === id) state.expandedId = null;
+  state.confirmDeleteId = null;
+  scheduleSave();
+}
+function setStatus(id, status) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === id ? { ...p, status, closedDate: status === "active" ? null : todayISO() } : p
+  );
+  scheduleSave();
+}
+function addProspect() {
+  if (!state.newName.trim()) return;
+  const p = {
+    id: uid(), companyName: state.newName.trim(), channel: state.newChannel, status: "active",
+    salesPotential: "Medium", annualPotential: 0, companyOverview: "", launchGoal: "",
+    lastContactDate: todayISO(), nextContactDate: "",
+    primaryContact: { name: "", phone: "", email: "" }, notes: [], actionSteps: [], closedDate: null,
+  };
+  state.prospects = [p, ...state.prospects];
+  state.newName = ""; state.newChannel = CHANNELS[0]; state.showAddForm = false;
+  state.expandedId = p.id; state.tab = "active";
+  scheduleSave();
+}
+function loadSampleData() {
+  state.prospects = seedData();
+  scheduleSave();
+}
+function exportData() {
+  const blob = new Blob([JSON.stringify(state.prospects, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url; a.download = `prospect-pipeline-backup-${todayISO()}.json`;
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
+function handleFileImport(e) {
+  const file = e.target.files && e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () => applyImport(reader.result);
+  reader.readAsText(file);
+  e.target.value = "";
+}
+function applyImport(text) {
+  try {
+    const parsed = JSON.parse(text);
+    if (!Array.isArray(parsed)) throw new Error("File doesn't contain a list of prospects.");
+    state.prospects = parsed;
+    state.showImport = false; state.importText = ""; state.importError = "";
+    scheduleSave();
+  } catch (e) {
+    state.importError = e.message || "Couldn't read that file.";
+    render();
+  }
+}
+
+// ---------- Render ----------
+function esc(s) {
+  return String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
+function renderGate() {
+  return `
+    <div class="gate">
+      <div class="title">${ICONS.flame}Prospect Pipeline</div>
+      <p>Stoll Industries · Sales Tracker</p>
+      <input id="passcodeInput" type="password" placeholder="Enter passcode" autofocus />
+      <button class="btn-primary" onclick="handlePasscodeSubmit()">${ICONS.check} Unlock</button>
+      ${state.authError ? `<div class="err">${esc(state.authError)}</div>` : ""}
+    </div>
+  `;
+}
+
+function renderCard(p) {
+  const isActive = p.status === "active";
+  const overdue = isActive && p.nextContactDate && p.nextContactDate < todayISO();
+  const expanded = state.expandedId === p.id;
+  const barColor = POTENTIAL_COLOR[p.salesPotential] || POTENTIAL_COLOR.Medium;
+
+  let detail = "";
+  if (expanded) {
+    const open = (p.actionSteps || []).filter((s) => !s.done);
+    const done = (p.actionSteps || []).filter((s) => s.done);
+    const showCompleted = !!state.showCompleted[p.id];
+
+    detail = `
+      <div class="detail">
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label">Sales Potential</label>
+            <select class="input" onchange="updateProspect('${p.id}', {salesPotential: this.value})">
+              ${POTENTIAL.map((v) => `<option value="${v}" ${p.salesPotential === v ? "selected" : ""}>${v}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Sales $ / Year</label>
+            <div class="dollar-wrap">
+              <span class="dollar-prefix">$</span>
+              <input class="input" type="number" min="0" step="1000" style="padding-left:20px;width:100%"
+                value="${p.annualPotential || ""}" placeholder="0"
+                onchange="updateProspect('${p.id}', {annualPotential: this.value === '' ? 0 : Number(this.value)})" />
+            </div>
+          </div>
+          <div class="field">
+            <label class="field-label">Channel</label>
+            <select class="input" onchange="updateProspect('${p.id}', {channel: this.value})">
+              ${CHANNELS.map((c) => `<option value="${esc(c)}" ${p.channel === c ? "selected" : ""}>${esc(c)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Launch Goal</label>
+            <input class="input" placeholder="e.g. Q4 2026" value="${esc(p.launchGoal)}"
+              onchange="updateProspect('${p.id}', {launchGoal: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Last Contact</label>
+            <input class="input" type="date" value="${p.lastContactDate || ""}"
+              onchange="updateProspect('${p.id}', {lastContactDate: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Next Contact</label>
+            <input class="input" type="date" value="${p.nextContactDate || ""}"
+              onchange="updateProspect('${p.id}', {nextContactDate: this.value})" />
+          </div>
+        </div>
+
+        <div class="contact-row">
+          <div class="field">
+            <label class="field-label">Primary Contact</label>
+            <input class="input" placeholder="Name" value="${esc(p.primaryContact.name)}"
+              onchange="updateContact('${p.id}', {name: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Phone</label>
+            <input class="input" placeholder="Phone" value="${esc(p.primaryContact.phone)}"
+              onchange="updateContact('${p.id}', {phone: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Email</label>
+            <input class="input" placeholder="Email" value="${esc(p.primaryContact.email)}"
+              onchange="updateContact('${p.id}', {email: this.value})" />
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Company Overview</div>
+          <textarea class="textarea" rows="3" placeholder="What does this company do, who do they serve, why are they a fit…"
+            onchange="updateProspect('${p.id}', {companyOverview: this.value})">${esc(p.companyOverview)}</textarea>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Action Steps</div>
+          <div class="notes-add">
+            <input class="input" style="flex:1" placeholder="Add an action step…"
+              value="${esc(state.stepDraft[p.id] || "")}"
+              oninput="state.stepDraft['${p.id}'] = this.value"
+              onkeydown="if(event.key==='Enter'){addActionStep('${p.id}')}" />
+            <button class="btn-primary" onclick="addActionStep('${p.id}')">${ICONS.plus} Add</button>
+          </div>
+          <div class="step-list">
+            ${open.length === 0 && done.length === 0 ? `<div class="empty-inline">No action steps yet.</div>` : ""}
+            ${open.map((s) => `
+              <div class="step-item">
+                <button class="step-checkbox" onclick="toggleActionStep('${p.id}','${s.id}')">${ICONS.square}</button>
+                <span class="step-text">${esc(s.text)}</span>
+                <button class="step-delete" onclick="deleteActionStep('${p.id}','${s.id}')">${ICONS.x}</button>
+              </div>
+            `).join("")}
+          </div>
+          ${done.length > 0 ? `
+            <button class="completed-toggle" onclick="state.showCompleted['${p.id}'] = !state.showCompleted['${p.id}']; render()">
+              <span class="chevron ${showCompleted ? "open" : ""}">${ICONS.chevron}</span> Completed (${done.length})
+            </button>
+            ${showCompleted ? `
+              <div class="step-list" style="margin-top:6px">
+                ${done.map((s) => `
+                  <div class="step-item done">
+                    <button class="step-checkbox" onclick="toggleActionStep('${p.id}','${s.id}')">${ICONS.checksquare}</button>
+                    <span class="step-text done">${esc(s.text)}</span>
+                    <span class="step-done-date">${fmtDate(s.doneDate)}</span>
+                    <button class="step-delete" onclick="deleteActionStep('${p.id}','${s.id}')">${ICONS.x}</button>
+                  </div>
+                `).join("")}
+              </div>
+            ` : ""}
+          ` : ""}
+        </div>
+
+        <div class="section">
+          <div class="section-label">Notes</div>
+          <div class="notes-add">
+            <textarea class="textarea" rows="2" placeholder="Add a note…"
+              oninput="state.noteDraft['${p.id}'] = this.value">${esc(state.noteDraft[p.id] || "")}</textarea>
+            <button class="btn-primary" onclick="addNote('${p.id}')">${ICONS.plus} Add</button>
+          </div>
+          <div class="notes-list">
+            ${p.notes.length === 0 ? `<div class="empty-inline">No notes yet.</div>` : ""}
+            ${p.notes.map((n) => `
+              <div class="note-item">
+                <span class="note-date">${fmtDate(n.date)}</span>
+                <span class="note-text">${esc(n.text)}</span>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
+        <div class="action-row">
+          ${isActive ? `
+            <button class="btn-won" onclick="setStatus('${p.id}','won')">Mark Won</button>
+            <button class="btn-lost" onclick="setStatus('${p.id}','lost')">Mark Lost</button>
+          ` : `
+            <button class="btn-reopen" onclick="setStatus('${p.id}','active')">${ICONS.reopen} Reopen</button>
+          `}
+          <div class="spacer"></div>
+          ${state.confirmDeleteId === p.id ? `
+            <span class="confirm-text">Delete this prospect?</span>
+            <button class="btn-lost" onclick="deleteProspect('${p.id}')">Confirm</button>
+            <button class="btn-ghost" onclick="state.confirmDeleteId=null; render()">Cancel</button>
+          ` : `
+            <button class="btn-delete" onclick="state.confirmDeleteId='${p.id}'; render()">${ICONS.trash}</button>
+          `}
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="card">
+      <div class="card-bar" style="background:${barColor}"></div>
+      <div class="card-body">
+        <button class="card-header" onclick="state.expandedId = state.expandedId === '${p.id}' ? null : '${p.id}'; render()">
+          <div class="card-header-left">
+            <span class="company-name">${esc(p.companyName)}</span>
+            <span class="badge">${esc(p.channel)}</span>
+            <span class="badge" style="color:${barColor};border-color:${barColor}">${p.salesPotential} potential</span>
+            ${p.annualPotential ? `<span class="dollar-badge">${fmtCurrency(p.annualPotential)}/yr</span>` : ""}
+          </div>
+          <div class="card-header-right">
+            ${isActive
+              ? `<span class="next-contact ${overdue ? "overdue" : ""}">${ICONS.calendar} Next: ${p.nextContactDate ? fmtDate(p.nextContactDate) : "No date set"}</span>`
+              : `<span class="next-contact">Closed ${fmtDate(p.closedDate)}</span>`
+            }
+            <span class="chevron ${expanded ? "open" : ""}">${ICONS.chevron}</span>
+          </div>
+        </button>
+        ${detail}
+      </div>
+    </div>
+  `;
+}
+
+function renderBoard() {
+  const filtered = state.prospects
+    .filter((p) => p.status === state.tab)
+    .sort((a, b) => {
+      if (state.tab === "active") return (a.nextContactDate || "9999").localeCompare(b.nextContactDate || "9999");
+      return (b.closedDate || "").localeCompare(a.closedDate || "");
+    });
+
+  const counts = {
+    active: state.prospects.filter((p) => p.status === "active").length,
+    won: state.prospects.filter((p) => p.status === "won").length,
+    lost: state.prospects.filter((p) => p.status === "lost").length,
+  };
+
+  let saveStatus = "";
+  if (state.saving) saveStatus = `<div class="save-status">Saving…</div>`;
+  else if (state.saveError) saveStatus = `<div class="save-status error">Couldn't save changes (${esc(state.saveError)}) — they may be lost on refresh. <button class="retry-link" onclick="doSave()">Retry now</button></div>`;
+
+  return `
+    <div class="page">
+      <div class="header-title-row">${ICONS.flame}<h1 class="title">Prospect Pipeline</h1></div>
+      <p class="subtitle">Stoll Industries · Sales Tracker</p>
+      <p class="shared-notice">Shared board — passcode protected, visible and editable by anyone who has it.</p>
+      <div class="backup-row">
+        <button class="backup-btn" onclick="exportData()" ${state.prospects.length === 0 ? "disabled" : ""}>${ICONS.download} Export backup</button>
+        <button class="backup-btn" onclick="document.getElementById('fileInput').click()">${ICONS.upload} Import backup</button>
+        <button class="backup-btn" onclick="state.showImport = !state.showImport; render()">Paste JSON</button>
+        <button class="backup-btn" onclick="clearToken(); state.authenticated=false; render()">Lock board</button>
+        <input id="fileInput" type="file" accept="application/json" style="display:none" onchange="handleFileImport(event)" />
+      </div>
+      ${state.showImport ? `
+        <div class="import-panel">
+          <textarea class="textarea" rows="4" placeholder="Paste exported JSON here…"
+            oninput="state.importText = this.value">${esc(state.importText)}</textarea>
+          <div style="display:flex;gap:8px;margin-top:8px">
+            <button class="btn-primary" onclick="applyImport(state.importText)">${ICONS.check} Restore this data</button>
+            <button class="btn-ghost" onclick="state.showImport=false; state.importText=''; state.importError=''; render()">Cancel</button>
+          </div>
+          ${state.importError ? `<div class="import-error">${esc(state.importError)}</div>` : ""}
+        </div>
+      ` : ""}
+
+      <div class="tab-bar">
+        ${["active", "won", "lost"].map((t) => `
+          <button class="tab-btn ${state.tab === t ? "active" : ""}" onclick="state.tab='${t}'; state.expandedId=null; render()">
+            ${STATUS_LABEL[t]} <span class="tab-count">${counts[t]}</span>
+          </button>
+        `).join("")}
+        <div class="spacer"></div>
+        ${state.tab === "active" ? `
+          <button class="add-btn" onclick="state.showAddForm = !state.showAddForm; render()">${ICONS.plus} Add Prospect</button>
+        ` : ""}
+      </div>
+
+      ${state.showAddForm ? `
+        <div class="add-form">
+          <input id="newNameInput" class="input" placeholder="Company name" value="${esc(state.newName)}"
+            oninput="state.newName=this.value" onkeydown="if(event.key==='Enter'){addProspect()}" />
+          <select class="input" onchange="state.newChannel=this.value">
+            ${CHANNELS.map((c) => `<option value="${esc(c)}" ${state.newChannel === c ? "selected" : ""}>${esc(c)}</option>`).join("")}
+          </select>
+          <button class="btn-primary" onclick="addProspect()">${ICONS.check} Save</button>
+          <button class="btn-ghost" onclick="state.showAddForm=false; render()">${ICONS.x}</button>
+        </div>
+      ` : ""}
+
+      ${!state.loaded ? `<div class="empty">Loading pipeline…</div>` : ""}
+
+      ${state.loaded && filtered.length === 0 ? `
+        <div class="empty">
+          ${state.prospects.length === 0 && state.tab === "active"
+            ? `<div>No prospects saved to this board yet.</div><button class="btn-ghost" style="margin-top:10px" onclick="loadSampleData()">Load sample data</button>`
+            : state.tab === "active" ? "No active prospects yet. Add one to start tracking." : `No ${STATUS_LABEL[state.tab].toLowerCase()} prospects yet.`}
+        </div>
+      ` : ""}
+
+      <div class="list">${filtered.map(renderCard).join("")}</div>
+      ${saveStatus}
+    </div>
+  `;
+}
+
+function render() {
+  const root = document.getElementById("root");
+  root.innerHTML = state.authenticated ? renderBoard() : renderGate();
+  if (!state.authenticated) {
+    const el = document.getElementById("passcodeInput");
+    if (el) {
+      el.focus();
+      el.onkeydown = (e) => { if (e.key === "Enter") handlePasscodeSubmit(); };
+    }
+  }
+}
+
+function handlePasscodeSubmit() {
+  const el = document.getElementById("passcodeInput");
+  submitPasscode(el.value);
+}
+
+// expose functions used by inline handlers
+Object.assign(window, {
+  updateProspect, updateContact, addNote, addActionStep, toggleActionStep, deleteActionStep,
+  deleteProspect, setStatus, addProspect, loadSampleData, exportData, handleFileImport,
+  applyImport, handlePasscodeSubmit, doSave, clearToken, state, render,
+});
+
+render();
+tryLoad();
+</script>
+</body>
+</html>
