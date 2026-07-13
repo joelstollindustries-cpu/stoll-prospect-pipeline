@@ -399,7 +399,7 @@ function seedData() {
   return [
     {
       id: uid(), companyName: "Harmon Kitchen & Hearth", channel: "Hearth & Patio", status: "active",
-      salesPotential: "High", salesRep: "Joel Stoll", city: "Greenville", state: "SC", annualPotential: 85000,
+      salesPotential: "High", salesRep: "Joel Stoll", city: "Greenville", state: "SC", ebmsSetup: "Yes", annualPotential: 85000,
       companyOverview: "Regional hearth & patio dealer with three showroom locations across upstate SC.",
       launchGoal: "Q4 2026", lastContactDate: "2026-06-28", nextContactDate: "2026-07-14",
       primaryContact: { name: "Dana Whitfield", phone: "864-555-0142", email: "dana@harmonkh.com" },
@@ -479,7 +479,7 @@ function addProspect() {
   if (!state.newName.trim()) return;
   const p = {
     id: uid(), companyName: state.newName.trim(), channel: state.newChannel, status: "active",
-    salesPotential: "Medium", salesRep: "", city: "", state: "", annualPotential: 0, companyOverview: "", launchGoal: "",
+    salesPotential: "Medium", salesRep: "", city: "", state: "", ebmsSetup: "", annualPotential: 0, companyOverview: "", launchGoal: "",
     lastContactDate: todayISO(), nextContactDate: "",
     primaryContact: { name: "", phone: "", email: "" }, notes: [], actionSteps: [], closedDate: null,
   };
@@ -618,6 +618,14 @@ function renderCard(p) {
             <label class="field-label">State</label>
             <input class="input" placeholder="State" value="${esc(p.state || "")}"
               onchange="updateProspect('${p.id}', {state: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Setup in EBMS</label>
+            <select class="input" onchange="updateProspect('${p.id}', {ebmsSetup: this.value})">
+              <option value="" ${!p.ebmsSetup ? "selected" : ""}></option>
+              <option value="Yes" ${p.ebmsSetup === "Yes" ? "selected" : ""}>Yes</option>
+              <option value="No" ${p.ebmsSetup === "No" ? "selected" : ""}>No</option>
+            </select>
           </div>
         </div>
 
