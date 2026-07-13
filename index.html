@@ -380,6 +380,16 @@ function scheduleSave() {
   render();
 }
 
+// Used for plain field edits (text/select/date inputs). Skips the immediate
+// re-render so a full DOM replacement doesn't happen mid-blur, which is what
+// broke Tab-to-next-field navigation — the browser was trying to focus a
+// DOM node that had just been destroyed and rebuilt.
+function scheduleSaveQuiet() {
+  state.saveError = "";
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(doSave, 500);
+}
+
 async function doSave() {
   state.prospects = state.prospects.map((p) => (isValidUUID(p.id) ? p : { ...p, id: uid() }));
   state.saving = true;
@@ -413,13 +423,13 @@ function seedData() {
 // ---------- Mutations ----------
 function updateProspect(id, patch) {
   state.prospects = state.prospects.map((p) => (p.id === id ? { ...p, ...patch } : p));
-  scheduleSave();
+  scheduleSaveQuiet();
 }
 function updateContact(id, patch) {
   state.prospects = state.prospects.map((p) =>
     p.id === id ? { ...p, primaryContact: { ...p.primaryContact, ...patch } } : p
   );
-  scheduleSave();
+  scheduleSaveQuiet();
 }
 function addNote(id) {
   const text = (state.noteDraft[id] || "").trim();
@@ -447,7 +457,7 @@ function updateActionStepDueDate(id, stepId, dueDate) {
       ? { ...p, actionSteps: p.actionSteps.map((s) => s.id === stepId ? { ...s, dueDate: dueDate || null } : s) }
       : p
   );
-  scheduleSave();
+  scheduleSaveQuiet();
 }
 function toggleActionStep(id, stepId) {
   state.prospects = state.prospects.map((p) =>
