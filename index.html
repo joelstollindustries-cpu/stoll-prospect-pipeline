@@ -134,6 +134,8 @@
   .step-text.done { color: var(--text-secondary); text-decoration: line-through; }
   .step-done-date { font-size: 11px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; flex-shrink: 0; }
   .step-delete { background: none; border: none; color: var(--text-muted); cursor: pointer; padding: 2px; flex-shrink: 0; }
+  .step-due-input { width: 132px; padding: 5px 7px; font-size: 12px; flex-shrink: 0; }
+  .step-due-input.overdue { border-color: #9F1C34; color: #9F1C34; }
   .completed-toggle { background: none; border: none; color: var(--text-muted); font-size: 12px; cursor: pointer; display: flex; align-items: center; gap: 5px; padding: 0; margin-top: 10px; }
   .action-row { display: flex; align-items: center; gap: 8px; margin-top: 18px; flex-wrap: wrap; }
   .btn-won { background: #3E5A48; color: #E7F0EA; border: none; border-radius: 6px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; }
@@ -213,6 +215,7 @@ let state = {
   importError: "",
   noteDraft: {},
   stepDraft: {},
+  stepDueDraft: {},
   showCompleted: {},
   confirmDeleteId: null,
   fileUploadStatus: {},
@@ -401,7 +404,7 @@ function seedData() {
       launchGoal: "Q4 2026", lastContactDate: "2026-06-28", nextContactDate: "2026-07-14",
       primaryContact: { name: "Dana Whitfield", phone: "864-555-0142", email: "dana@harmonkh.com" },
       notes: [{ id: uid(), date: "2026-06-28", text: "Walked through the fireplace door line, strong interest in the custom bronze finish." }],
-      actionSteps: [{ id: uid(), text: "Send updated freight quote", done: false, doneDate: null }],
+      actionSteps: [{ id: uid(), text: "Send updated freight quote", done: false, doneDate: null, dueDate: "2026-07-18" }],
       closedDate: null,
     },
   ];
@@ -430,10 +433,20 @@ function addNote(id) {
 function addActionStep(id) {
   const text = (state.stepDraft[id] || "").trim();
   if (!text) return;
+  const dueDate = state.stepDueDraft[id] || null;
   state.prospects = state.prospects.map((p) =>
-    p.id === id ? { ...p, actionSteps: [...(p.actionSteps || []), { id: uid(), text, done: false, doneDate: null }] } : p
+    p.id === id ? { ...p, actionSteps: [...(p.actionSteps || []), { id: uid(), text, done: false, doneDate: null, dueDate }] } : p
   );
   state.stepDraft[id] = "";
+  state.stepDueDraft[id] = "";
+  scheduleSave();
+}
+function updateActionStepDueDate(id, stepId, dueDate) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === id
+      ? { ...p, actionSteps: p.actionSteps.map((s) => s.id === stepId ? { ...s, dueDate: dueDate || null } : s) }
+      : p
+  );
   scheduleSave();
 }
 function toggleActionStep(id, stepId) {
@@ -623,17 +636,26 @@ function renderCard(p) {
               value="${esc(state.stepDraft[p.id] || "")}"
               oninput="state.stepDraft['${p.id}'] = this.value"
               onkeydown="if(event.key==='Enter'){addActionStep('${p.id}')}" />
+            <input class="input" type="date" title="Due date (optional)" style="width:150px"
+              value="${state.stepDueDraft[p.id] || ""}"
+              oninput="state.stepDueDraft['${p.id}'] = this.value" />
             <button class="btn-primary" onclick="addActionStep('${p.id}')">${ICONS.plus} Add</button>
           </div>
           <div class="step-list">
             ${open.length === 0 && done.length === 0 ? `<div class="empty-inline">No action steps yet.</div>` : ""}
-            ${open.map((s) => `
+            ${open.map((s) => {
+              const overdueStep = s.dueDate && s.dueDate < todayISO();
+              return `
               <div class="step-item">
                 <button class="step-checkbox" onclick="toggleActionStep('${p.id}','${s.id}')">${ICONS.square}</button>
                 <span class="step-text">${esc(s.text)}</span>
+                <input class="input step-due-input ${overdueStep ? "overdue" : ""}" type="date" title="Due date"
+                  value="${s.dueDate || ""}"
+                  onchange="updateActionStepDueDate('${p.id}','${s.id}', this.value)" />
                 <button class="step-delete" onclick="deleteActionStep('${p.id}','${s.id}')">${ICONS.x}</button>
               </div>
-            `).join("")}
+            `;
+            }).join("")}
           </div>
           ${done.length > 0 ? `
             <button class="completed-toggle" onclick="state.showCompleted['${p.id}'] = !state.showCompleted['${p.id}']; render()">
@@ -868,6 +890,7 @@ function handlePasscodeSubmit() {
 // expose functions used by inline handlers
 Object.assign(window, {
   updateProspect, updateContact, addNote, addActionStep, toggleActionStep, deleteActionStep,
+  updateActionStepDueDate,
   deleteProspect, setStatus, addProspect, loadSampleData, exportData, handleFileImport,
   applyImport, handlePasscodeSubmit, doSave, clearToken, state, render,
   handleFileSelect, downloadFile, deleteFile, setTheme,
