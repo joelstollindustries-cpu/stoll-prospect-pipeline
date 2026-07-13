@@ -155,6 +155,7 @@ let state = {
   stepDraft: {},
   showCompleted: {},
   confirmDeleteId: null,
+  fileUploadStatus: {},
 };
 
 function uid() {
@@ -177,6 +178,74 @@ function fmtCurrency(n) {
   const num = Number(n);
   if (!num) return "$0";
   return "$" + num.toLocaleString("en-US");
+}
+function fmtFileSize(bytes) {
+  const n = Number(bytes) || 0;
+  if (n < 1024) return n + " B";
+  if (n < 1024 * 1024) return (n / 1024).toFixed(1) + " KB";
+  return (n / (1024 * 1024)).toFixed(1) + " MB";
+}
+
+const MAX_UPLOAD_BYTES = 4 * 1024 * 1024;
+
+function handleFileSelect(e, prospectId) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  if (file.size > MAX_UPLOAD_BYTES) {
+    state.fileUploadStatus[prospectId] = `"${file.name}" is over the 4MB limit.`;
+    render();
+    return;
+  }
+  state.fileUploadStatus[prospectId] = `Uploading ${file.name}…`;
+  render();
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const dataUrl = reader.result;
+    const base64 = String(dataUrl).split(",")[1];
+    try {
+      const res = await api("upload-file", {
+        body: { prospectId, fileName: file.name, fileType: file.type, dataBase64: base64 },
+      });
+      state.prospects = state.prospects.map((p) =>
+        p.id === prospectId ? { ...p, attachments: [...(p.attachments || []), res.attachment] } : p
+      );
+      state.fileUploadStatus[prospectId] = "";
+      scheduleSave();
+    } catch (err) {
+      state.fileUploadStatus[prospectId] = `Upload failed: ${err.message || "unknown error"}`;
+      render();
+    }
+  };
+  reader.onerror = () => {
+    state.fileUploadStatus[prospectId] = "Couldn't read that file.";
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function downloadFile(path) {
+  try {
+    const res = await api("file-url", { body: { path } });
+    window.open(res.url, "_blank");
+  } catch (err) {
+    alert("Couldn't open file: " + (err.message || "unknown error"));
+  }
+}
+
+async function deleteFile(prospectId, fileId, path) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === prospectId ? { ...p, attachments: (p.attachments || []).filter((f) => f.id !== fileId) } : p
+  );
+  render();
+  scheduleSave();
+  try {
+    await api("delete-file", { body: { path } });
+  } catch (err) {
+    // Metadata is already removed from the board; storage cleanup failure is non-fatal.
+    console.error("Failed to delete stored file:", err);
+  }
 }
 
 function getToken() { return localStorage.getItem("board_token"); }
@@ -531,6 +600,27 @@ function renderCard(p) {
           </div>
         </div>
 
+        <div class="section">
+          <div class="section-label">Files</div>
+          <div class="notes-add">
+            <input class="input" type="file" style="flex:1"
+              onchange="handleFileSelect(event, '${p.id}')" />
+          </div>
+          <div class="notes-list">
+            ${state.fileUploadStatus[p.id] ? `<div class="empty-inline">${esc(state.fileUploadStatus[p.id])}</div>` : ""}
+            ${(p.attachments || []).length === 0 && !state.fileUploadStatus[p.id] ? `<div class="empty-inline">No files yet.</div>` : ""}
+            ${(p.attachments || []).map((f) => `
+              <div class="note-item">
+                <span class="note-text" style="flex:1">
+                  ${esc(f.name)} <span style="color:#7A7274;font-size:11px">(${fmtFileSize(f.size)} · ${fmtDate(f.uploadedDate)})</span>
+                </span>
+                <button class="backup-btn" style="padding:4px 8px" onclick="downloadFile('${f.path}')">${ICONS.download}</button>
+                <button class="step-delete" onclick="deleteFile('${p.id}','${f.id}','${f.path}')">${ICONS.x}</button>
+              </div>
+            `).join("")}
+          </div>
+        </div>
+
         <div class="action-row">
           ${isActive ? `
             <button class="btn-won" onclick="setStatus('${p.id}','won')">Mark Won</button>
@@ -680,6 +770,7 @@ Object.assign(window, {
   updateProspect, updateContact, addNote, addActionStep, toggleActionStep, deleteActionStep,
   deleteProspect, setStatus, addProspect, loadSampleData, exportData, handleFileImport,
   applyImport, handlePasscodeSubmit, doSave, clearToken, state, render,
+  handleFileSelect, downloadFile, deleteFile,
 });
 
 render();
