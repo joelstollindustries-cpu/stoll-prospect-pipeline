@@ -158,6 +158,16 @@
   .gate button { width: 100%; margin-top: 12px; padding: 10px; justify-content: center; }
   .gate .err { color: #9F1C34; font-size: 12.5px; margin-top: 10px; }
 
+  /* Action Items tab */
+  .action-items-groups { display: flex; flex-direction: column; gap: 26px; }
+  .action-items-group { }
+  .action-items-group-header {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    text-align: left; color: inherit;
+  }
+  .action-items-group-header:hover { border-color: #9F1C34; }
+
   /* Settings */
   .settings-panel { max-width: 560px; }
   .theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
@@ -180,7 +190,7 @@ const API_BASE = "https://cddgbxjzoyhqeipdajwz.supabase.co/functions/v1/board-ap
 const CHANNELS = ["Kitchen & Bath", "Hearth & Patio", "Outdoor Kitchen"];
 const POTENTIAL = ["High", "Medium", "Low"];
 const POTENTIAL_COLOR = { High: "#C1622C", Medium: "#8C9AAE", Low: "#5A5456" };
-const STATUS_LABEL = { active: "Active", won: "Won", lost: "Lost" };
+const STATUS_LABEL = { active: "Active", won: "Won", lost: "Lost", actionitems: "Action Items" };
 
 const ICONS = {
   flame: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F1C34" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
@@ -800,6 +810,7 @@ function renderBoard() {
     active: state.prospects.filter((p) => p.status === "active").length,
     won: state.prospects.filter((p) => p.status === "won").length,
     lost: state.prospects.filter((p) => p.status === "lost").length,
+    actionitems: state.prospects.reduce((n, p) => n + (p.actionSteps || []).filter((s) => !s.done).length, 0),
   };
 
   let saveStatus = "";
@@ -831,7 +842,7 @@ function renderBoard() {
       ` : ""}
 
       <div class="tab-bar">
-        ${["active", "won", "lost"].map((t) => `
+        ${["active", "won", "lost", "actionitems"].map((t) => `
           <button class="tab-btn ${state.tab === t ? "active" : ""}" onclick="state.tab='${t}'; state.expandedId=null; render()">
             ${STATUS_LABEL[t]} <span class="tab-count">${counts[t]}</span>
           </button>
@@ -844,7 +855,7 @@ function renderBoard() {
           onclick="state.tab='settings'; state.expandedId=null; render()">${ICONS.gear}</button>
       </div>
 
-      ${state.tab === "settings" ? renderSettings() : `
+      ${state.tab === "settings" ? renderSettings() : state.tab === "actionitems" ? renderActionItems() : `
         ${state.showAddForm ? `
           <div class="add-form">
             <input id="newNameInput" class="input" placeholder="Company name" value="${esc(state.newName)}"
@@ -870,6 +881,56 @@ function renderBoard() {
         <div class="list">${filtered.map(renderCard).join("")}</div>
         ${saveStatus}
       `}
+    </div>
+  `;
+}
+
+function renderActionItems() {
+  const groups = state.prospects
+    .map((p) => ({
+      prospect: p,
+      steps: (p.actionSteps || [])
+        .filter((s) => !s.done)
+        .sort((a, b) => (a.dueDate || "9999").localeCompare(b.dueDate || "9999")),
+    }))
+    .filter((g) => g.steps.length > 0)
+    .sort((a, b) => {
+      const aDue = a.steps[0].dueDate || "9999";
+      const bDue = b.steps[0].dueDate || "9999";
+      return aDue.localeCompare(bDue);
+    });
+
+  if (groups.length === 0) {
+    return `<div class="empty">No open action items across any prospects.</div>`;
+  }
+
+  return `
+    <div class="action-items-groups">
+      ${groups.map((g) => `
+        <div class="action-items-group">
+          <button class="action-items-group-header" onclick="state.tab='${g.prospect.status}'; state.expandedId='${g.prospect.id}'; render()">
+            <span class="company-name">${esc(g.prospect.companyName)}</span>
+            <span class="badge">${esc(g.prospect.channel)}</span>
+            ${g.prospect.status !== "active" ? `<span class="badge">${STATUS_LABEL[g.prospect.status]}</span>` : ""}
+            <span class="tab-count">${g.steps.length}</span>
+          </button>
+          <div class="step-list" style="margin-top:8px">
+            ${g.steps.map((s) => {
+              const overdueStep = s.dueDate && s.dueDate < todayISO();
+              return `
+              <div class="step-item">
+                <button class="step-checkbox" onclick="toggleActionStep('${g.prospect.id}','${s.id}')">${ICONS.square}</button>
+                <span class="step-text">${esc(s.text)}</span>
+                <input class="input step-due-input ${overdueStep ? "overdue" : ""}" type="date" title="Due date"
+                  value="${s.dueDate || ""}"
+                  onchange="updateActionStepDueDate('${g.prospect.id}','${s.id}', this.value)" />
+                <button class="step-delete" onclick="deleteActionStep('${g.prospect.id}','${s.id}')">${ICONS.x}</button>
+              </div>
+            `;
+            }).join("")}
+          </div>
+        </div>
+      `).join("")}
     </div>
   `;
 }
