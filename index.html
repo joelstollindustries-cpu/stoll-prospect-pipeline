@@ -396,7 +396,7 @@ function seedData() {
   return [
     {
       id: uid(), companyName: "Harmon Kitchen & Hearth", channel: "Hearth & Patio", status: "active",
-      salesPotential: "High", annualPotential: 85000,
+      salesPotential: "High", salesRep: "Joel Stoll", annualPotential: 85000,
       companyOverview: "Regional hearth & patio dealer with three showroom locations across upstate SC.",
       launchGoal: "Q4 2026", lastContactDate: "2026-06-28", nextContactDate: "2026-07-14",
       primaryContact: { name: "Dana Whitfield", phone: "864-555-0142", email: "dana@harmonkh.com" },
@@ -466,7 +466,7 @@ function addProspect() {
   if (!state.newName.trim()) return;
   const p = {
     id: uid(), companyName: state.newName.trim(), channel: state.newChannel, status: "active",
-    salesPotential: "Medium", annualPotential: 0, companyOverview: "", launchGoal: "",
+    salesPotential: "Medium", salesRep: "", annualPotential: 0, companyOverview: "", launchGoal: "",
     lastContactDate: todayISO(), nextContactDate: "",
     primaryContact: { name: "", phone: "", email: "" }, notes: [], actionSteps: [], closedDate: null,
   };
@@ -584,6 +584,11 @@ function renderCard(p) {
             <label class="field-label">Next Contact</label>
             <input class="input" type="date" value="${p.nextContactDate || ""}"
               onchange="updateProspect('${p.id}', {nextContactDate: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Sales Rep</label>
+            <input class="input" placeholder="Rep name" value="${esc(p.salesRep || "")}"
+              onchange="updateProspect('${p.id}', {salesRep: this.value})" />
           </div>
         </div>
 
