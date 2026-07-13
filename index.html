@@ -399,7 +399,7 @@ function seedData() {
   return [
     {
       id: uid(), companyName: "Harmon Kitchen & Hearth", channel: "Hearth & Patio", status: "active",
-      salesPotential: "High", salesRep: "Joel Stoll", annualPotential: 85000,
+      salesPotential: "High", salesRep: "Joel Stoll", city: "Greenville", state: "SC", annualPotential: 85000,
       companyOverview: "Regional hearth & patio dealer with three showroom locations across upstate SC.",
       launchGoal: "Q4 2026", lastContactDate: "2026-06-28", nextContactDate: "2026-07-14",
       primaryContact: { name: "Dana Whitfield", phone: "864-555-0142", email: "dana@harmonkh.com" },
@@ -479,7 +479,7 @@ function addProspect() {
   if (!state.newName.trim()) return;
   const p = {
     id: uid(), companyName: state.newName.trim(), channel: state.newChannel, status: "active",
-    salesPotential: "Medium", salesRep: "", annualPotential: 0, companyOverview: "", launchGoal: "",
+    salesPotential: "Medium", salesRep: "", city: "", state: "", annualPotential: 0, companyOverview: "", launchGoal: "",
     lastContactDate: todayISO(), nextContactDate: "",
     primaryContact: { name: "", phone: "", email: "" }, notes: [], actionSteps: [], closedDate: null,
   };
@@ -561,6 +561,12 @@ function renderCard(p) {
 
     detail = `
       <div class="detail">
+        <div class="section" style="margin-top:14px">
+          <div class="section-label">Company Overview</div>
+          <textarea class="textarea" rows="3" placeholder="What does this company do, who do they serve, why are they a fit…"
+            onchange="updateProspect('${p.id}', {companyOverview: this.value})">${esc(p.companyOverview)}</textarea>
+        </div>
+
         <div class="field-grid">
           <div class="field">
             <label class="field-label">Sales Potential</label>
@@ -603,6 +609,16 @@ function renderCard(p) {
             <input class="input" placeholder="Rep name" value="${esc(p.salesRep || "")}"
               onchange="updateProspect('${p.id}', {salesRep: this.value})" />
           </div>
+          <div class="field">
+            <label class="field-label">City</label>
+            <input class="input" placeholder="City" value="${esc(p.city || "")}"
+              onchange="updateProspect('${p.id}', {city: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">State</label>
+            <input class="input" placeholder="State" value="${esc(p.state || "")}"
+              onchange="updateProspect('${p.id}', {state: this.value})" />
+          </div>
         </div>
 
         <div class="contact-row">
@@ -621,12 +637,6 @@ function renderCard(p) {
             <input class="input" placeholder="Email" value="${esc(p.primaryContact.email)}"
               onchange="updateContact('${p.id}', {email: this.value})" />
           </div>
-        </div>
-
-        <div class="section">
-          <div class="section-label">Company Overview</div>
-          <textarea class="textarea" rows="3" placeholder="What does this company do, who do they serve, why are they a fit…"
-            onchange="updateProspect('${p.id}', {companyOverview: this.value})">${esc(p.companyOverview)}</textarea>
         </div>
 
         <div class="section">
