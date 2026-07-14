@@ -79,6 +79,7 @@
     border-radius: 7px; cursor: pointer; display: flex; align-items: center;
   }
   .settings-btn.active { background: var(--surface); color: var(--text); border-color: #9F1C34; }
+  .sort-select { width: auto; max-width: 220px; }
   .add-btn {
     background: #9F1C34; color: #F4F1EF; border: none; border-radius: 7px; padding: 8px 14px;
     font-size: 13.5px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px;
@@ -203,6 +204,33 @@ const POTENTIAL = ["High", "Medium", "Low"];
 const POTENTIAL_COLOR = { High: "#C1622C", Medium: "#8C9AAE", Low: "#5A5456" };
 const STATUS_LABEL = { active: "Active", won: "Won", lost: "Lost", actionitems: "Action Items" };
 
+const SORT_OPTIONS = [
+  { id: "nextcontact", label: "Next Contact Date" },
+  { id: "lastcontact", label: "Last Contact Date" },
+  { id: "name", label: "Company Name (A–Z)" },
+  { id: "potential", label: "Sales Potential" },
+  { id: "dollar", label: "Sales $ / Year (High–Low)" },
+  { id: "channel", label: "Channel" },
+  { id: "launchgoal", label: "Launch Goal" },
+  { id: "closeddate", label: "Closed Date" },
+];
+const POTENTIAL_ORDER = { High: 0, Medium: 1, Low: 2 };
+
+function sortProspects(list, sortId) {
+  const arr = [...list];
+  const cmp = {
+    nextcontact: (a, b) => (a.nextContactDate || "9999").localeCompare(b.nextContactDate || "9999"),
+    lastcontact: (a, b) => (a.lastContactDate || "9999").localeCompare(b.lastContactDate || "9999"),
+    name: (a, b) => (a.companyName || "").localeCompare(b.companyName || ""),
+    potential: (a, b) => (POTENTIAL_ORDER[a.salesPotential] ?? 9) - (POTENTIAL_ORDER[b.salesPotential] ?? 9),
+    dollar: (a, b) => (b.annualPotential || 0) - (a.annualPotential || 0),
+    channel: (a, b) => (a.channel || "").localeCompare(b.channel || ""),
+    launchgoal: (a, b) => (a.launchGoal || "zzzz").localeCompare(b.launchGoal || "zzzz"),
+    closeddate: (a, b) => (b.closedDate || "").localeCompare(a.closedDate || ""),
+  }[sortId];
+  return cmp ? arr.sort(cmp) : arr;
+}
+
 const ICONS = {
   flame: '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#9F1C34" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 17a2.5 2.5 0 0 0 2.5-2.5c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7.5 7.5 0 1 1-15 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
   calendar: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>',
@@ -241,6 +269,7 @@ let state = {
   confirmDeleteId: null,
   fileUploadStatus: {},
   theme: localStorage.getItem("board_theme") || "dark",
+  sortBy: null,
 };
 
 function uid() {
@@ -1072,12 +1101,11 @@ function renderCard(p) {
 }
 
 function renderBoard() {
-  const filtered = state.prospects
-    .filter((p) => p.status === state.tab)
-    .sort((a, b) => {
-      if (state.tab === "active") return (a.nextContactDate || "9999").localeCompare(b.nextContactDate || "9999");
-      return (b.closedDate || "").localeCompare(a.closedDate || "");
-    });
+  const effectiveSort = state.sortBy || (state.tab === "active" ? "nextcontact" : "closeddate");
+  const filtered = sortProspects(
+    state.prospects.filter((p) => p.status === state.tab),
+    effectiveSort
+  );
 
   const counts = {
     active: state.prospects.filter((p) => p.status === "active").length,
@@ -1124,6 +1152,11 @@ function renderBoard() {
           Reports
         </button>
         <div class="spacer"></div>
+        ${["active", "won", "lost"].includes(state.tab) ? `
+          <select class="input sort-select" title="Sort by" onchange="state.sortBy = this.value; render()">
+            ${SORT_OPTIONS.map((o) => `<option value="${o.id}" ${effectiveSort === o.id ? "selected" : ""}>Sort: ${o.label}</option>`).join("")}
+          </select>
+        ` : ""}
         ${state.tab === "active" ? `
           <button class="add-btn" onclick="state.showAddForm = !state.showAddForm; render()">${ICONS.plus} Add Prospect</button>
         ` : ""}
