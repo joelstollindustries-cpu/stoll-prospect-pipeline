@@ -168,6 +168,15 @@
   }
   .action-items-group-header:hover { border-color: #9F1C34; }
 
+  /* Reports tab */
+  .report-list { display: flex; flex-direction: column; gap: 10px; }
+  .report-card {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+    display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+  }
+  .report-card-title { font-size: 14.5px; font-weight: 600; font-family: 'Poppins', sans-serif; }
+  .report-card-desc { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; max-width: 440px; }
+
   /* Settings */
   .settings-panel { max-width: 560px; }
   .theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
@@ -181,6 +190,7 @@
   .theme-card-label { font-size: 13.5px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
 </style>
 <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
 </head>
 <body>
   <div id="root"></div>
@@ -716,6 +726,78 @@ function generateProspectPDF(prospectId) {
   const safeName = (p.companyName || "prospect").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   doc.save(`${safeName}-overview-${todayISO()}.pdf`);
 }
+
+function generateActiveProspectsReport() {
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF library didn't load — check your internet connection and try again.");
+    return;
+  }
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "letter", orientation: "landscape" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 40;
+  const crimson = [159, 28, 52];
+  const charcoal = [35, 31, 32];
+  const gray = [110, 104, 105];
+
+  const active = state.prospects
+    .filter((p) => p.status === "active")
+    .sort((a, b) => a.companyName.localeCompare(b.companyName));
+
+  const rows = active.map((p) => [
+    p.companyName || "—",
+    p.channel || "—",
+    p.salesPotential || "—",
+    p.annualPotential ? fmtCurrency(p.annualPotential) : "—",
+    p.launchGoal || "—",
+  ]);
+
+  function header() {
+    try {
+      doc.addImage(STOLL_LOGO_BASE64, "PNG", margin, 30, 145, 29.5);
+    } catch (e) { /* logo optional */ }
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(9);
+    doc.setTextColor(...gray);
+    doc.text("ACTIVE PROSPECTS OVERVIEW", pageWidth - margin, 40, { align: "right" });
+    doc.setFontSize(8.5);
+    doc.text(`Generated ${fmtDate(todayISO())}  ·  ${active.length} active prospect${active.length === 1 ? "" : "s"}`, pageWidth - margin, 52, { align: "right" });
+    doc.setDrawColor(...crimson);
+    doc.setLineWidth(2);
+    doc.line(margin, 74, pageWidth - margin, 74);
+  }
+
+  function footer(pageNum) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...gray);
+    doc.text("Stoll Industries — Prospect Pipeline", margin, pageHeight - 24);
+    doc.text(String(pageNum), pageWidth / 2, pageHeight - 24, { align: "center" });
+  }
+
+  header();
+
+  doc.autoTable({
+    startY: 92,
+    margin: { left: margin, right: margin },
+    head: [["Prospect Name", "Channel", "Sales Potential", "Sales $ / Year", "Launch Goal"]],
+    body: rows.length > 0 ? rows : [["No active prospects", "", "", "", ""]],
+    styles: { font: "helvetica", fontSize: 10, textColor: charcoal, cellPadding: 8 },
+    headStyles: { fillColor: crimson, textColor: [255, 255, 255], fontStyle: "bold" },
+    alternateRowStyles: { fillColor: [244, 240, 239] },
+    columnStyles: {
+      0: { fontStyle: "bold" },
+      3: { halign: "right" },
+    },
+    didDrawPage: (data) => {
+      if (data.pageNumber > 1) header();
+      footer(data.pageNumber);
+    },
+  });
+
+  doc.save(`active-prospects-overview-${todayISO()}.pdf`);
+}
 function handleFileImport(e) {
   const file = e.target.files && e.target.files[0];
   if (!file) return;
@@ -1038,6 +1120,9 @@ function renderBoard() {
             ${STATUS_LABEL[t]} <span class="tab-count">${counts[t]}</span>
           </button>
         `).join("")}
+        <button class="tab-btn ${state.tab === "reports" ? "active" : ""}" onclick="state.tab='reports'; state.expandedId=null; render()">
+          Reports
+        </button>
         <div class="spacer"></div>
         ${state.tab === "active" ? `
           <button class="add-btn" onclick="state.showAddForm = !state.showAddForm; render()">${ICONS.plus} Add Prospect</button>
@@ -1046,7 +1131,7 @@ function renderBoard() {
           onclick="state.tab='settings'; state.expandedId=null; render()">${ICONS.gear}</button>
       </div>
 
-      ${state.tab === "settings" ? renderSettings() : state.tab === "actionitems" ? renderActionItems() : `
+      ${state.tab === "settings" ? renderSettings() : state.tab === "actionitems" ? renderActionItems() : state.tab === "reports" ? renderReports() : `
         ${state.showAddForm ? `
           <div class="add-form">
             <input id="newNameInput" class="input" placeholder="Company name" value="${esc(state.newName)}"
@@ -1072,6 +1157,37 @@ function renderBoard() {
         <div class="list">${filtered.map(renderCard).join("")}</div>
         ${saveStatus}
       `}
+    </div>
+  `;
+}
+
+const REPORTS = [
+  {
+    id: "active-overview",
+    title: "Active Prospects Overview",
+    description: "One table of every active prospect — name, channel, sales potential, sales $/year, and launch goal.",
+    fn: "generateActiveProspectsReport",
+  },
+];
+
+function renderReports() {
+  return `
+    <div class="settings-panel">
+      <div class="section-label">Available Reports</div>
+      <div style="font-size:12.5px;color:var(--text-muted);margin-top:-2px;margin-bottom:14px">
+        More report types can be added here over time.
+      </div>
+      <div class="report-list">
+        ${REPORTS.map((r) => `
+          <div class="report-card">
+            <div>
+              <div class="report-card-title">${esc(r.title)}</div>
+              <div class="report-card-desc">${esc(r.description)}</div>
+            </div>
+            <button class="btn-primary" onclick="${r.fn}()">${ICONS.download} Generate PDF</button>
+          </div>
+        `).join("")}
+      </div>
     </div>
   `;
 }
@@ -1173,7 +1289,7 @@ Object.assign(window, {
   updateActionStepDueDate,
   deleteProspect, setStatus, addProspect, loadSampleData, exportData, handleFileImport,
   applyImport, handlePasscodeSubmit, doSave, clearToken, state, render,
-  handleFileSelect, downloadFile, deleteFile, setTheme, generateProspectPDF,
+  handleFileSelect, downloadFile, deleteFile, setTheme, generateProspectPDF, generateActiveProspectsReport,
 });
 
 document.body.setAttribute("data-theme", state.theme);
