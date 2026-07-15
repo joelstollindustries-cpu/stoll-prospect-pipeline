@@ -261,6 +261,7 @@ function emptyLegal() {
     standardOrDrafted: "", negotiatingLeverage: "", strategicRelationship: "",
     otherAgreements: "", confidentialInfo: "", involvesIP: "", otherContext: "",
     routing,
+    attachments: [],
   };
 }
 function getLegal(p) {
@@ -325,6 +326,7 @@ let state = {
   showCompleted: {},
   confirmDeleteId: null,
   fileUploadStatus: {},
+  legalFileUploadStatus: {},
   theme: localStorage.getItem("board_theme") || "dark",
   sortBy: null,
   detailTab: {},
@@ -418,6 +420,60 @@ async function deleteFile(prospectId, fileId, path) {
     await api("delete-file", { body: { path } });
   } catch (err) {
     // Metadata is already removed from the board; storage cleanup failure is non-fatal.
+    console.error("Failed to delete stored file:", err);
+  }
+}
+
+function handleLegalFileSelect(e, prospectId) {
+  const file = e.target.files && e.target.files[0];
+  e.target.value = "";
+  if (!file) return;
+  if (file.size > MAX_UPLOAD_BYTES) {
+    state.legalFileUploadStatus[prospectId] = `"${file.name}" is over the 4MB limit.`;
+    render();
+    return;
+  }
+  state.legalFileUploadStatus[prospectId] = `Uploading ${file.name}…`;
+  render();
+
+  const reader = new FileReader();
+  reader.onload = async () => {
+    const dataUrl = reader.result;
+    const base64 = String(dataUrl).split(",")[1];
+    try {
+      const res = await api("upload-file", {
+        body: { prospectId, fileName: file.name, fileType: file.type, dataBase64: base64 },
+      });
+      state.prospects = state.prospects.map((p) => {
+        if (p.id !== prospectId) return p;
+        const legal = getLegal(p);
+        return { ...p, legal: { ...legal, attachments: [...(legal.attachments || []), res.attachment] } };
+      });
+      state.legalFileUploadStatus[prospectId] = "";
+      scheduleSave();
+    } catch (err) {
+      state.legalFileUploadStatus[prospectId] = `Upload failed: ${err.message || "unknown error"}`;
+      render();
+    }
+  };
+  reader.onerror = () => {
+    state.legalFileUploadStatus[prospectId] = "Couldn't read that file.";
+    render();
+  };
+  reader.readAsDataURL(file);
+}
+
+async function deleteLegalFile(prospectId, fileId, path) {
+  state.prospects = state.prospects.map((p) => {
+    if (p.id !== prospectId) return p;
+    const legal = getLegal(p);
+    return { ...p, legal: { ...legal, attachments: (legal.attachments || []).filter((f) => f.id !== fileId) } };
+  });
+  render();
+  scheduleSave();
+  try {
+    await api("delete-file", { body: { path } });
+  } catch (err) {
     console.error("Failed to delete stored file:", err);
   }
 }
@@ -1074,6 +1130,19 @@ function generateLegalPDF(prospectId) {
     didDrawPage: () => addFooter(),
   });
 
+  if ((legal.attachments || []).length > 0) {
+    y = doc.lastAutoTable.finalY + 24;
+    sectionLabel("Attached Files");
+    legal.attachments.forEach((f) => {
+      newPageIfNeeded(16);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9.5);
+      doc.setTextColor(...charcoal);
+      doc.text(`•  ${f.name}  (${fmtFileSize(f.size)}, added ${fmtDate(f.uploadedDate)})`, margin, y);
+      y += 15;
+    });
+  }
+
   addFooter();
   const safeName = (p.companyName || "prospect").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
   doc.save(`${safeName}-legal-review-${todayISO()}.pdf`);
@@ -1543,6 +1612,27 @@ function renderCard(p) {
             `).join("")}
           </div>
         </div>
+
+        <div class="section">
+          <div class="section-label">Files</div>
+          <div class="notes-add">
+            <input class="input" type="file" style="flex:1"
+              onchange="handleLegalFileSelect(event, '${p.id}')" />
+          </div>
+          <div class="notes-list">
+            ${state.legalFileUploadStatus[p.id] ? `<div class="empty-inline">${esc(state.legalFileUploadStatus[p.id])}</div>` : ""}
+            ${(legal.attachments || []).length === 0 && !state.legalFileUploadStatus[p.id] ? `<div class="empty-inline">No files yet.</div>` : ""}
+            ${(legal.attachments || []).map((f) => `
+              <div class="note-item">
+                <span class="note-text" style="flex:1">
+                  ${esc(f.name)} <span style="color:#7A7274;font-size:11px">(${fmtFileSize(f.size)} · ${fmtDate(f.uploadedDate)})</span>
+                </span>
+                <button class="backup-btn" style="padding:4px 8px" onclick="downloadFile('${f.path}')">${ICONS.download}</button>
+                <button class="step-delete" onclick="deleteLegalFile('${p.id}','${f.id}','${f.path}')">${ICONS.x}</button>
+              </div>
+            `).join("")}
+          </div>
+        </div>
         `}
 
         <div class="action-row">
@@ -1817,6 +1907,7 @@ Object.assign(window, {
   handleFileSelect, downloadFile, deleteFile, setTheme, generateProspectPDF, generateActiveProspectsReport,
   startEditNote, cancelEditNote, saveEditNote, deleteNote, updateActionStepText,
   updateLegal, toggleLegalListValue, updateLegalRouting, generateLegalPDF,
+  handleLegalFileSelect, deleteLegalFile,
 });
 
 document.body.setAttribute("data-theme", state.theme);
