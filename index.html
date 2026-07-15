@@ -593,12 +593,6 @@ function updateLegal(id, patch) {
   );
   scheduleSaveQuiet();
 }
-function updateLegalRequired(id, value) {
-  state.prospects = state.prospects.map((p) =>
-    p.id === id ? { ...p, legal: { ...getLegal(p), required: value } } : p
-  );
-  scheduleSave();
-}
 function toggleLegalListValue(id, field, value) {
   state.prospects = state.prospects.map((p) => {
     if (p.id !== id) return p;
@@ -1409,23 +1403,7 @@ function renderCard(p) {
           </div>
         </div>
         ` : `
-        <div class="section" style="margin-top:14px">
-          <div class="field" style="max-width:220px">
-            <label class="field-label">Is Legal Required?</label>
-            <select class="input" onchange="updateLegalRequired('${p.id}', this.value)">
-              <option value="" ${!legal.required ? "selected" : ""}></option>
-              <option value="Yes" ${legal.required === "Yes" ? "selected" : ""}>Yes</option>
-              <option value="No" ${legal.required === "No" ? "selected" : ""}>No</option>
-            </select>
-          </div>
-        </div>
-
-        ${legal.required !== "Yes" ? `
-          <div class="empty-inline" style="margin-top:14px">
-            ${legal.required === "No" ? "Marked as not requiring legal review." : "Select \u201cYes\u201d above if this prospect's agreement needs to go through legal review."}
-          </div>
-        ` : `
-        <div class="action-row" style="margin-top:10px">
+        <div class="action-row" style="margin-top:14px">
           <button class="btn-ghost" onclick="generateLegalPDF('${p.id}')">${ICONS.download} Legal Review PDF</button>
         </div>
 
@@ -1565,7 +1543,6 @@ function renderCard(p) {
             `).join("")}
           </div>
         </div>
-        `}
         `}
 
         <div class="action-row">
@@ -1839,7 +1816,7 @@ Object.assign(window, {
   applyImport, handlePasscodeSubmit, doSave, clearToken, state, render,
   handleFileSelect, downloadFile, deleteFile, setTheme, generateProspectPDF, generateActiveProspectsReport,
   startEditNote, cancelEditNote, saveEditNote, deleteNote, updateActionStepText,
-  updateLegal, updateLegalRequired, toggleLegalListValue, updateLegalRouting, generateLegalPDF,
+  updateLegal, toggleLegalListValue, updateLegalRouting, generateLegalPDF,
 });
 
 document.body.setAttribute("data-theme", state.theme);
