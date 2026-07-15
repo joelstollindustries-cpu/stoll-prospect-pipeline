@@ -120,6 +120,15 @@
     padding: 8px 4px; cursor: pointer; border-bottom: 2px solid transparent; margin-right: 14px;
   }
   .detail-subtab.active { color: var(--text); border-bottom-color: #9F1C34; }
+  .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 14px; margin-top: 4px; }
+  .checkbox-pill { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text); cursor: pointer; }
+  .checkbox-pill input { accent-color: #9F1C34; width: 15px; height: 15px; cursor: pointer; }
+  .routing-table { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+  .routing-row {
+    display: grid; grid-template-columns: 1.4fr 1.2fr 1fr 1fr; gap: 8px; align-items: center;
+  }
+  .routing-head { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
+  .routing-role { font-size: 12.5px; color: var(--text-secondary); }
   .field-grid, .contact-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
@@ -223,6 +232,45 @@ const SORT_OPTIONS = [
   { id: "closeddate", label: "Closed Date" },
 ];
 const POTENTIAL_ORDER = { High: 0, Medium: 1, Low: 2 };
+
+const AGREEMENT_TYPES = [
+  "Customer Contract", "Vendor Agreement", "NDA", "Master Service Agreement",
+  "Purchase Agreement", "Distribution Agreement", "Consulting Agreement", "Lease", "Other",
+];
+const LEGAL_CONCERNS = [
+  "Limitation of Liability", "Indemnification", "Warranty", "Insurance Requirements",
+  "Confidentiality", "Intellectual Property", "Non-Compete", "Exclusivity",
+  "Auto Renewal", "Termination Rights", "Governing Law", "Dispute Resolution", "Other",
+];
+const ROUTING_ROLES = [
+  "Requestor", "Department Manager", "Finance", "Procurement", "Engineering",
+  "IT/Security Review", "VP/Executive Sponsor", "Legal Counsel",
+  "Administrator (Version Control)", "Executor",
+];
+
+function emptyLegal() {
+  const routing = {};
+  ROUTING_ROLES.forEach((r) => { routing[r] = { name: "", reviewedDate: "", approvedDate: "" }; });
+  return {
+    required: "",
+    stollContact: "", department: "", dateSubmitted: "", responseDate: "",
+    agreementTypes: [], agreementTypeOther: "",
+    otherPartyName: "", relationship: "", relationshipLength: "",
+    businessPurpose: "", financialImpact: "",
+    concerns: [], concernsOther: "",
+    standardOrDrafted: "", negotiatingLeverage: "", strategicRelationship: "",
+    otherAgreements: "", confidentialInfo: "", involvesIP: "", otherContext: "",
+    routing,
+  };
+}
+function getLegal(p) {
+  const base = emptyLegal();
+  const saved = p.legal || {};
+  return {
+    ...base, ...saved,
+    routing: { ...base.routing, ...(saved.routing || {}) },
+  };
+}
 
 function sortProspects(list, sortId) {
   const arr = [...list];
@@ -539,6 +587,36 @@ function updateActionStepText(id, stepId, text) {
   );
   scheduleSaveQuiet();
 }
+function updateLegal(id, patch) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === id ? { ...p, legal: { ...getLegal(p), ...patch } } : p
+  );
+  scheduleSaveQuiet();
+}
+function updateLegalRequired(id, value) {
+  state.prospects = state.prospects.map((p) =>
+    p.id === id ? { ...p, legal: { ...getLegal(p), required: value } } : p
+  );
+  scheduleSave();
+}
+function toggleLegalListValue(id, field, value) {
+  state.prospects = state.prospects.map((p) => {
+    if (p.id !== id) return p;
+    const legal = getLegal(p);
+    const list = legal[field] || [];
+    const next = list.includes(value) ? list.filter((v) => v !== value) : [...list, value];
+    return { ...p, legal: { ...legal, [field]: next } };
+  });
+  scheduleSave();
+}
+function updateLegalRouting(id, role, patch) {
+  state.prospects = state.prospects.map((p) => {
+    if (p.id !== id) return p;
+    const legal = getLegal(p);
+    return { ...p, legal: { ...legal, routing: { ...legal.routing, [role]: { ...legal.routing[role], ...patch } } } };
+  });
+  scheduleSaveQuiet();
+}
 function addActionStep(id) {
   const text = (state.stepDraft[id] || "").trim();
   if (!text) return;
@@ -805,6 +883,208 @@ function generateProspectPDF(prospectId) {
   doc.save(`${safeName}-overview-${todayISO()}.pdf`);
 }
 
+function generateLegalPDF(prospectId) {
+  const p = state.prospects.find((x) => x.id === prospectId);
+  if (!p) return;
+  const legal = getLegal(p);
+  if (!window.jspdf || !window.jspdf.jsPDF) {
+    alert("PDF library didn't load — check your internet connection and try again.");
+    return;
+  }
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ unit: "pt", format: "letter" });
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  const margin = 48;
+  const contentWidth = pageWidth - margin * 2;
+  const crimson = [159, 28, 52];
+  const charcoal = [35, 31, 32];
+  const gray = [110, 104, 105];
+  const lightGray = [230, 224, 222];
+  let y = 0;
+
+  function newPageIfNeeded(need) {
+    if (y + need > pageHeight - 56) {
+      addFooter();
+      doc.addPage();
+      y = margin;
+    }
+  }
+  function addFooter() {
+    const pageNum = doc.internal.getCurrentPageInfo().pageNumber;
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(8.5);
+    doc.setTextColor(...gray);
+    doc.text("Stoll Industries — Legal Review Request", margin, pageHeight - 28);
+    doc.text(`Generated ${fmtDate(todayISO())}`, pageWidth - margin, pageHeight - 28, { align: "right" });
+    doc.text(String(pageNum), pageWidth / 2, pageHeight - 28, { align: "center" });
+  }
+  function sectionLabel(text) {
+    newPageIfNeeded(28);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...crimson);
+    doc.text(text.toUpperCase(), margin, y);
+    doc.setDrawColor(...lightGray);
+    doc.setLineWidth(0.75);
+    doc.line(margin, y + 5, pageWidth - margin, y + 5);
+    y += 20;
+  }
+  function fieldRow(pairs) {
+    const colWidth = contentWidth / 2;
+    let rowY = y;
+    pairs.forEach((pair, i) => {
+      const col = i % 2;
+      const x = margin + col * colWidth;
+      if (col === 0 && i > 0) rowY += 32;
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(...gray);
+      doc.text(pair[0].toUpperCase(), x, rowY);
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(10.5);
+      doc.setTextColor(...charcoal);
+      const lines = doc.splitTextToSize(pair[1] || "—", colWidth - 16);
+      doc.text(lines.slice(0, 2), x, rowY + 15);
+    });
+    y = rowY + 32;
+  }
+  function paragraph(text, size = 10) {
+    doc.setFont("helvetica", "normal");
+    doc.setFontSize(size);
+    doc.setTextColor(...charcoal);
+    const lines = doc.splitTextToSize(text || "—", contentWidth);
+    lines.forEach((line) => {
+      newPageIfNeeded(16);
+      doc.text(line, margin, y);
+      y += 14;
+    });
+  }
+  function checklistLine(items) {
+    const text = items.length > 0 ? items.join("  ·  ") : "—";
+    paragraph(text);
+  }
+
+  try {
+    doc.addImage(STOLL_LOGO_BASE64, "PNG", margin, 36, 145, 29.5);
+  } catch (e) { /* logo optional */ }
+  doc.setFont("helvetica", "normal");
+  doc.setFontSize(9);
+  doc.setTextColor(...gray);
+  doc.text("LEGAL REVIEW REQUEST FORM", pageWidth - margin, 46, { align: "right" });
+  doc.setFontSize(8.5);
+  doc.text(`Generated ${fmtDate(todayISO())}`, pageWidth - margin, 58, { align: "right" });
+  doc.setDrawColor(...crimson);
+  doc.setLineWidth(2);
+  doc.line(margin, 82, pageWidth - margin, 82);
+  y = 112;
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(20);
+  doc.setTextColor(...charcoal);
+  doc.text(p.companyName || "Untitled Prospect", margin, y);
+  y += 30;
+
+  sectionLabel("Contract Review Request Summary");
+  fieldRow([
+    ["Stoll Contact", legal.stollContact],
+    ["Department", legal.department],
+    ["Date Submitted", fmtDate(legal.dateSubmitted)],
+    ["Requested Response Date", fmtDate(legal.responseDate)],
+  ]);
+  y += 4;
+
+  sectionLabel("Agreement Type");
+  const agreementList = [...legal.agreementTypes];
+  if (legal.agreementTypes.includes("Other") && legal.agreementTypeOther) {
+    const idx = agreementList.indexOf("Other");
+    agreementList[idx] = `Other (${legal.agreementTypeOther})`;
+  }
+  checklistLine(agreementList);
+  y += 10;
+
+  sectionLabel("Other Party & Relationship");
+  fieldRow([
+    ["Name of Other Party", legal.otherPartyName],
+    ["Relationship", legal.relationship],
+    ["Length of Relationship", legal.relationshipLength],
+    ["", ""],
+  ]);
+  y += 4;
+
+  sectionLabel("Business Purpose");
+  paragraph(legal.businessPurpose);
+  y += 10;
+
+  sectionLabel("Financial Impact");
+  paragraph(legal.financialImpact);
+  y += 10;
+
+  sectionLabel("Items of Particular Concern");
+  const concernList = [...legal.concerns];
+  if (legal.concerns.includes("Other") && legal.concernsOther) {
+    const idx = concernList.indexOf("Other");
+    concernList[idx] = `Other (${legal.concernsOther})`;
+  }
+  checklistLine(concernList);
+  y += 10;
+
+  sectionLabel("Supplemental Questions for Context");
+  const qa = [
+    ["Standard company agreement or drafted by other party?", legal.standardOrDrafted],
+    ["Who has the negotiating leverage?", legal.negotiatingLeverage],
+    ["Is this a strategic relationship?", legal.strategicRelationship],
+    ["Any other agreements with this company?", legal.otherAgreements],
+    ["Will confidential information be exchanged?", legal.confidentialInfo],
+    ["Does this involve software, data, or IP?", legal.involvesIP],
+  ];
+  qa.forEach(([q, a]) => {
+    newPageIfNeeded(28);
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...charcoal);
+    doc.text(q, margin, y);
+    y += 13;
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(...gray);
+    doc.text(a || "—", margin, y);
+    y += 16;
+  });
+  if (legal.otherContext) {
+    y += 4;
+    doc.setFont("helvetica", "bold");
+    doc.setFontSize(9);
+    doc.setTextColor(...charcoal);
+    newPageIfNeeded(16);
+    doc.text("Any other elements to note for context?", margin, y);
+    y += 13;
+    paragraph(legal.otherContext);
+  }
+  y += 6;
+
+  sectionLabel("Legal Review Routing & Approval Matrix");
+  newPageIfNeeded(30);
+  const rows = ROUTING_ROLES.map((role) => {
+    const r = legal.routing[role] || { name: "", reviewedDate: "", approvedDate: "" };
+    return [role, r.name || "—", fmtDate(r.reviewedDate), fmtDate(r.approvedDate)];
+  });
+  doc.autoTable({
+    startY: y,
+    margin: { left: margin, right: margin },
+    head: [["Responsible Party", "Name", "Reviewed Draft", "Approved Final"]],
+    body: rows,
+    styles: { font: "helvetica", fontSize: 8.5, textColor: charcoal, cellPadding: 5 },
+    headStyles: { fillColor: crimson, textColor: [255, 255, 255], fontStyle: "bold", fontSize: 8 },
+    alternateRowStyles: { fillColor: [244, 240, 239] },
+    didDrawPage: () => addFooter(),
+  });
+
+  addFooter();
+  const safeName = (p.companyName || "prospect").replace(/[^a-zA-Z0-9]+/g, "-").replace(/^-+|-+$/g, "");
+  doc.save(`${safeName}-legal-review-${todayISO()}.pdf`);
+}
+
 function generateActiveProspectsReport() {
   if (!window.jspdf || !window.jspdf.jsPDF) {
     alert("PDF library didn't load — check your internet connection and try again.");
@@ -928,6 +1208,7 @@ function renderCard(p) {
     const open = (p.actionSteps || []).filter((s) => !s.done);
     const done = (p.actionSteps || []).filter((s) => s.done);
     const showCompleted = !!state.showCompleted[p.id];
+    const legal = getLegal(p);
 
     detail = `
       <div class="detail">
@@ -936,6 +1217,8 @@ function renderCard(p) {
             onclick="state.detailTab['${p.id}']='company'; render()">Company Info</button>
           <button class="detail-subtab ${state.detailTab[p.id] === "activity" ? "active" : ""}"
             onclick="state.detailTab['${p.id}']='activity'; render()">Activity</button>
+          <button class="detail-subtab ${state.detailTab[p.id] === "legal" ? "active" : ""}"
+            onclick="state.detailTab['${p.id}']='legal'; render()">Legal</button>
         </div>
 
         ${(state.detailTab[p.id] || "company") === "company" ? `
@@ -1024,7 +1307,7 @@ function renderCard(p) {
               onchange="updateContact('${p.id}', {email: this.value})" />
           </div>
         </div>
-        ` : `
+        ` : state.detailTab[p.id] === "activity" ? `
         <div class="section" style="margin-top:14px">
           <div class="section-label">Action Steps</div>
           <div class="notes-add">
@@ -1125,6 +1408,164 @@ function renderCard(p) {
             `).join("")}
           </div>
         </div>
+        ` : `
+        <div class="section" style="margin-top:14px">
+          <div class="field" style="max-width:220px">
+            <label class="field-label">Is Legal Required?</label>
+            <select class="input" onchange="updateLegalRequired('${p.id}', this.value)">
+              <option value="" ${!legal.required ? "selected" : ""}></option>
+              <option value="Yes" ${legal.required === "Yes" ? "selected" : ""}>Yes</option>
+              <option value="No" ${legal.required === "No" ? "selected" : ""}>No</option>
+            </select>
+          </div>
+        </div>
+
+        ${legal.required !== "Yes" ? `
+          <div class="empty-inline" style="margin-top:14px">
+            ${legal.required === "No" ? "Marked as not requiring legal review." : "Select \u201cYes\u201d above if this prospect's agreement needs to go through legal review."}
+          </div>
+        ` : `
+        <div class="action-row" style="margin-top:10px">
+          <button class="btn-ghost" onclick="generateLegalPDF('${p.id}')">${ICONS.download} Legal Review PDF</button>
+        </div>
+
+        <div class="field-grid" style="margin-top:18px">
+          <div class="field">
+            <label class="field-label">Stoll Contact</label>
+            <input class="input" value="${esc(legal.stollContact)}" onchange="updateLegal('${p.id}', {stollContact: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Department</label>
+            <input class="input" value="${esc(legal.department)}" onchange="updateLegal('${p.id}', {department: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Date Submitted</label>
+            <input class="input" type="date" value="${legal.dateSubmitted}" onchange="updateLegal('${p.id}', {dateSubmitted: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Requested Response Date</label>
+            <input class="input" type="date" value="${legal.responseDate}" onchange="updateLegal('${p.id}', {responseDate: this.value})" />
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Agreement Type</div>
+          <div class="checkbox-grid">
+            ${AGREEMENT_TYPES.map((t) => `
+              <label class="checkbox-pill">
+                <input type="checkbox" ${legal.agreementTypes.includes(t) ? "checked" : ""}
+                  onchange="toggleLegalListValue('${p.id}','agreementTypes','${t}')" /> ${esc(t)}
+              </label>
+            `).join("")}
+          </div>
+          ${legal.agreementTypes.includes("Other") ? `
+            <input class="input" style="margin-top:8px" placeholder="Describe other agreement type"
+              value="${esc(legal.agreementTypeOther)}" onchange="updateLegal('${p.id}', {agreementTypeOther: this.value})" />
+          ` : ""}
+        </div>
+
+        <div class="field-grid">
+          <div class="field">
+            <label class="field-label">Name of Other Party to Agreement</label>
+            <input class="input" value="${esc(legal.otherPartyName)}" onchange="updateLegal('${p.id}', {otherPartyName: this.value})" />
+          </div>
+          <div class="field">
+            <label class="field-label">Relationship</label>
+            <select class="input" onchange="updateLegal('${p.id}', {relationship: this.value})">
+              <option value="" ${!legal.relationship ? "selected" : ""}></option>
+              <option value="New" ${legal.relationship === "New" ? "selected" : ""}>New</option>
+              <option value="Existing" ${legal.relationship === "Existing" ? "selected" : ""}>Existing</option>
+              <option value="Renewal" ${legal.relationship === "Renewal" ? "selected" : ""}>Renewal</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="field-label">Length of Relationship</label>
+            <input class="input" value="${esc(legal.relationshipLength)}" onchange="updateLegal('${p.id}', {relationshipLength: this.value})" />
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Business Purpose</div>
+          <div class="empty-inline" style="margin-bottom:6px">Briefly describe the business relationship and why this agreement is needed.</div>
+          <textarea class="textarea" rows="3" onchange="updateLegal('${p.id}', {businessPurpose: this.value})">${esc(legal.businessPurpose)}</textarea>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Financial Impact</div>
+          <div class="empty-inline" style="margin-bottom:6px">Estimated annual revenue or purchases, strategic product expansion, etc.</div>
+          <textarea class="textarea" rows="3" onchange="updateLegal('${p.id}', {financialImpact: this.value})">${esc(legal.financialImpact)}</textarea>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Items of Particular Concern</div>
+          <div class="checkbox-grid">
+            ${LEGAL_CONCERNS.map((c) => `
+              <label class="checkbox-pill">
+                <input type="checkbox" ${legal.concerns.includes(c) ? "checked" : ""}
+                  onchange="toggleLegalListValue('${p.id}','concerns','${c}')" /> ${esc(c)}
+              </label>
+            `).join("")}
+          </div>
+          ${legal.concerns.includes("Other") ? `
+            <input class="input" style="margin-top:8px" placeholder="Describe other concerns"
+              value="${esc(legal.concernsOther)}" onchange="updateLegal('${p.id}', {concernsOther: this.value})" />
+          ` : ""}
+        </div>
+
+        <div class="section">
+          <div class="section-label">Supplemental Questions for Context</div>
+          <div class="field-grid" style="margin-top:0">
+            <div class="field">
+              <label class="field-label">Standard company agreement, or drafted by other party?</label>
+              <input class="input" value="${esc(legal.standardOrDrafted)}" onchange="updateLegal('${p.id}', {standardOrDrafted: this.value})" />
+            </div>
+            <div class="field">
+              <label class="field-label">Who has the negotiating leverage?</label>
+              <input class="input" value="${esc(legal.negotiatingLeverage)}" onchange="updateLegal('${p.id}', {negotiatingLeverage: this.value})" />
+            </div>
+            <div class="field">
+              <label class="field-label">Is this a strategic relationship?</label>
+              <input class="input" value="${esc(legal.strategicRelationship)}" onchange="updateLegal('${p.id}', {strategicRelationship: this.value})" />
+            </div>
+            <div class="field">
+              <label class="field-label">Any other agreements with this company?</label>
+              <input class="input" value="${esc(legal.otherAgreements)}" onchange="updateLegal('${p.id}', {otherAgreements: this.value})" />
+            </div>
+            <div class="field">
+              <label class="field-label">Will confidential information be exchanged?</label>
+              <input class="input" value="${esc(legal.confidentialInfo)}" onchange="updateLegal('${p.id}', {confidentialInfo: this.value})" />
+            </div>
+            <div class="field">
+              <label class="field-label">Involves software, data, or IP?</label>
+              <input class="input" value="${esc(legal.involvesIP)}" onchange="updateLegal('${p.id}', {involvesIP: this.value})" />
+            </div>
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label class="field-label">Any other elements to note for context?</label>
+            <textarea class="textarea" rows="2" onchange="updateLegal('${p.id}', {otherContext: this.value})">${esc(legal.otherContext)}</textarea>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-label">Legal Review Routing &amp; Approval Matrix</div>
+          <div class="routing-table">
+            <div class="routing-row routing-head">
+              <div>Responsible Party</div><div>Name</div><div>Reviewed Draft Date</div><div>Approved Final Version Date</div>
+            </div>
+            ${ROUTING_ROLES.map((role) => `
+              <div class="routing-row">
+                <div class="routing-role">${esc(role)}</div>
+                <input class="input" value="${esc(legal.routing[role].name)}"
+                  onchange="updateLegalRouting('${p.id}','${role}', {name: this.value})" />
+                <input class="input" type="date" value="${legal.routing[role].reviewedDate}"
+                  onchange="updateLegalRouting('${p.id}','${role}', {reviewedDate: this.value})" />
+                <input class="input" type="date" value="${legal.routing[role].approvedDate}"
+                  onchange="updateLegalRouting('${p.id}','${role}', {approvedDate: this.value})" />
+              </div>
+            `).join("")}
+          </div>
+        </div>
+        `}
         `}
 
         <div class="action-row">
@@ -1398,6 +1839,7 @@ Object.assign(window, {
   applyImport, handlePasscodeSubmit, doSave, clearToken, state, render,
   handleFileSelect, downloadFile, deleteFile, setTheme, generateProspectPDF, generateActiveProspectsReport,
   startEditNote, cancelEditNote, saveEditNote, deleteNote, updateActionStepText,
+  updateLegal, updateLegalRequired, toggleLegalListValue, updateLegalRouting, generateLegalPDF,
 });
 
 document.body.setAttribute("data-theme", state.theme);
