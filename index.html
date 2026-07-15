@@ -1171,9 +1171,35 @@ function generateLegalPDF(prospectId) {
       y += 14;
     });
   }
-  function checklistLine(items) {
-    const text = items.length > 0 ? items.join("  ·  ") : "—";
-    paragraph(text);
+  function drawCheckbox(x, boxY, checked) {
+    const size = 9;
+    doc.setDrawColor(...gray);
+    doc.setLineWidth(0.8);
+    doc.rect(x, boxY - size + 2, size, size);
+    if (checked) {
+      doc.setDrawColor(...crimson);
+      doc.setLineWidth(1.2);
+      doc.line(x + 1.5, boxY - 3, x + 3.5, boxY - 0.5);
+      doc.line(x + 3.5, boxY - 0.5, x + 7.5, boxY - 7);
+    }
+  }
+  function checkboxList(items, selected) {
+    const colWidth = contentWidth / 2;
+    const rowHeight = 18;
+    items.forEach((item, i) => {
+      const col = i % 2;
+      const row = Math.floor(i / 2);
+      const x = margin + col * colWidth;
+      const rowY = y + row * rowHeight;
+      newPageIfNeeded(rowHeight);
+      const checked = selected.includes(item);
+      drawCheckbox(x, rowY, checked);
+      doc.setFont("helvetica", checked ? "bold" : "normal");
+      doc.setFontSize(10);
+      doc.setTextColor(...charcoal);
+      doc.text(item, x + 15, rowY);
+    });
+    y += Math.ceil(items.length / 2) * rowHeight + 4;
   }
 
   try {
@@ -1194,7 +1220,18 @@ function generateLegalPDF(prospectId) {
   doc.setFontSize(20);
   doc.setTextColor(...charcoal);
   doc.text(p.companyName || "Untitled Prospect", margin, y);
-  y += 30;
+  y += 24;
+
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(9);
+  doc.setTextColor(...gray);
+  const introText = "Prior to forwarding a legal agreement to external counsel for review, this form captures the information needed to save time, give legal counsel important business context, and help them focus on the issues that matter most \u2014 explaining why the agreement exists, what the business expects to accomplish, and where management believes the risks may be.";
+  const introLines = doc.splitTextToSize(introText, contentWidth);
+  introLines.forEach((line) => {
+    doc.text(line, margin, y);
+    y += 12;
+  });
+  y += 12;
 
   sectionLabel("Contract Review Request Summary");
   fieldRow([
@@ -1206,13 +1243,15 @@ function generateLegalPDF(prospectId) {
   y += 4;
 
   sectionLabel("Agreement Type");
-  const agreementList = [...legal.agreementTypes];
+  checkboxList(AGREEMENT_TYPES, legal.agreementTypes);
   if (legal.agreementTypes.includes("Other") && legal.agreementTypeOther) {
-    const idx = agreementList.indexOf("Other");
-    agreementList[idx] = `Other (${legal.agreementTypeOther})`;
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...gray);
+    doc.text(`Other: ${legal.agreementTypeOther}`, margin, y);
+    y += 16;
   }
-  checklistLine(agreementList);
-  y += 10;
+  y += 6;
 
   sectionLabel("Other Party & Relationship");
   fieldRow([
@@ -1224,21 +1263,35 @@ function generateLegalPDF(prospectId) {
   y += 4;
 
   sectionLabel("Business Purpose");
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...gray);
+  const bpHint = "Briefly describe the business relationship and why this agreement is needed.";
+  doc.text(doc.splitTextToSize(bpHint, contentWidth), margin, y);
+  y += 14;
   paragraph(legal.businessPurpose);
   y += 10;
 
   sectionLabel("Financial Impact");
+  doc.setFont("helvetica", "italic");
+  doc.setFontSize(8.5);
+  doc.setTextColor(...gray);
+  const fiHint = "Estimated annual revenue or purchases, strategic product expansion, etc.";
+  doc.text(doc.splitTextToSize(fiHint, contentWidth), margin, y);
+  y += 14;
   paragraph(legal.financialImpact);
   y += 10;
 
   sectionLabel("Items of Particular Concern");
-  const concernList = [...legal.concerns];
+  checkboxList(LEGAL_CONCERNS, legal.concerns);
   if (legal.concerns.includes("Other") && legal.concernsOther) {
-    const idx = concernList.indexOf("Other");
-    concernList[idx] = `Other (${legal.concernsOther})`;
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(9.5);
+    doc.setTextColor(...gray);
+    doc.text(`Other: ${legal.concernsOther}`, margin, y);
+    y += 16;
   }
-  checklistLine(concernList);
-  y += 10;
+  y += 6;
 
   sectionLabel("Supplemental Questions for Context");
   const qa = [
