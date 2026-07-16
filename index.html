@@ -56,7 +56,7 @@
   input:focus, select:focus, textarea:focus, button:focus-visible { outline: 2px solid #9F1C34; outline-offset: 1px; }
   ::placeholder { color: var(--placeholder); }
   a { color: inherit; }
-  .page { max-width: 920px; margin: 0 auto; }
+  .page { max-width: 1280px; margin: 0 auto; }
   .header-title-row { display: flex; align-items: center; gap: 9px; }
   .title { font-family: 'Poppins', sans-serif; font-weight: 600; font-size: 25px; }
   .subtitle { color: var(--text-secondary); font-size: 13px; margin: 4px 0 0 31px; }
@@ -101,7 +101,7 @@
   .card-bar { width: 5px; flex-shrink: 0; }
   .card-body { flex: 1; min-width: 0; }
   .card-header {
-    width: 100%; background: transparent; border: none; color: inherit; padding: 14px 16px; cursor: pointer;
+    width: 100%; background: transparent; border: none; color: inherit; padding: 16px 20px; cursor: pointer;
     display: flex; align-items: center; justify-content: space-between; gap: 12px; text-align: left; flex-wrap: wrap;
   }
   .card-header-left { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; min-width: 0; }
@@ -113,14 +113,14 @@
   .overdue { color: #9F1C34; }
   .chevron { transition: transform 0.15s; }
   .chevron.open { transform: rotate(180deg); }
-  .detail { padding: 4px 16px 16px; border-top: 1px solid var(--border); }
+  .detail { padding: 4px 20px 20px; border-top: 1px solid var(--border); }
   .detail-subtabs { display: flex; gap: 6px; margin-top: 14px; border-bottom: 1px solid var(--border); }
   .detail-subtab {
     background: none; border: none; color: var(--text-muted); font-size: 13px; font-weight: 500;
     padding: 8px 4px; cursor: pointer; border-bottom: 2px solid transparent; margin-right: 14px;
   }
   .detail-subtab.active { color: var(--text); border-bottom-color: #9F1C34; }
-  .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 8px 14px; margin-top: 4px; }
+  .checkbox-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px 18px; margin-top: 6px; }
   .checkbox-pill { display: flex; align-items: center; gap: 7px; font-size: 13px; color: var(--text); cursor: pointer; }
   .checkbox-pill input { accent-color: #9F1C34; width: 15px; height: 15px; cursor: pointer; }
   .routing-table { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
@@ -129,7 +129,7 @@
   }
   .routing-head { font-size: 10.5px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.4px; }
   .routing-role { font-size: 12.5px; color: var(--text-secondary); }
-  .field-grid, .contact-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 14px; }
+  .field-grid, .contact-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px 20px; margin-top: 16px; }
   .field { display: flex; flex-direction: column; gap: 5px; }
   .field-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
   .dollar-wrap { position: relative; }
@@ -164,10 +164,10 @@
   .btn-delete { background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 6px; padding: 8px 10px; cursor: pointer; }
   .confirm-text { font-size: 12.5px; color: var(--text-secondary); }
   .empty { color: var(--text-muted); font-size: 13.5px; padding: 30px 0; text-align: center; }
-  .save-status { max-width: 920px; margin: 16px auto 0; font-size: 12.5px; text-align: center; color: var(--text-muted); }
+  .save-status { max-width: 1280px; margin: 16px auto 0; font-size: 12.5px; text-align: center; color: var(--text-muted); }
   .save-status.error { color: #9F1C34; }
   .retry-link { background: none; border: none; color: #9F1C34; text-decoration: underline; font-size: 12.5px; cursor: pointer; margin-left: 8px; padding: 0; }
-  .import-panel { margin: 10px 0 0 31px; max-width: 500px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
+  .import-panel { margin: 10px 0 0 31px; max-width: 640px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 12px; }
   .import-error { color: #9F1C34; font-size: 12px; margin-top: 8px; }
 
   /* Passcode gate */
@@ -207,7 +207,7 @@
   .report-card-desc { font-size: 12.5px; color: var(--text-muted); margin-top: 3px; max-width: 440px; }
 
   /* Settings */
-  .settings-panel { max-width: 560px; }
+  .settings-panel { max-width: 760px; }
   .theme-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 10px; }
   .theme-card {
     background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px;
